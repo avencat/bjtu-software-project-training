@@ -1,5 +1,6 @@
 let express = require('express');
 let router = express.Router();
+let passport = require('passport');
 
 let db = require('../queries');
 
@@ -8,6 +9,26 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+router.post('/api/login',
+  passport.authenticate('local', { failureRedirect: '/api/login' }),
+  function(req, res) {
+    res.status(200)
+      .json({
+        status: 'success',
+        message: 'User connected'
+      });
+  });
+
+router.get('/api/my_secret_page', db.loggedIn, function (req, res) {
+  res.send('if you are viewing this page it means you are logged in');
+});
+
+router.get('/api/logout',
+  function(req, res){
+    req.logout();
+    res.redirect('/api/login');
+  }
+);
 
 router.get('/api', db.getAllPosts);
 router.get('/api/users', db.getUsers);

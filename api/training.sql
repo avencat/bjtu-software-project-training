@@ -9,18 +9,22 @@ CREATE TABLE users (
   lastname    VARCHAR,
   birthday    DATE,
   email       VARCHAR UNIQUE NOT NULL,
+  login       VARCHAR UNIQUE NOT NULL,
   gender      SMALLINT,
   telephone   VARCHAR UNIQUE,
   password    VARCHAR NOT NULL
 );
 
+CREATE INDEX fullname ON users (firstname, lastname);
+
 CREATE TABLE friendship (
   id              SERIAL PRIMARY KEY,
-  follower_id     BIGINT UNIQUE NOT NULL,
-  following_id    BIGINT UNIQUE NOT NULL,
+  follower_id     BIGINT NOT NULL,
+  following_id    BIGINT NOT NULL,
   following_date  TIMESTAMPTZ,
   FOREIGN KEY     (follower_id)   REFERENCES users(id),
-  FOREIGN KEY     (following_id)  REFERENCES users(id)
+  FOREIGN KEY     (following_id)  REFERENCES users(id),
+  UNIQUE          (follower_id, following_id)
 );
 
 CREATE TABLE posts (
@@ -65,9 +69,6 @@ CREATE TABLE comment_likes (
   FOREIGN KEY     (user_id)     REFERENCES users(id),
   FOREIGN KEY     (comment_id)  REFERENCES comments(id)
 );
-
-INSERT INTO users (email, password)
-VALUES ('root@localhost.com', 'root');
 
 
 

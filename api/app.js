@@ -1,14 +1,45 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
-var session = require('express-session');
+let express = require('express');
+let path = require('path');
+let favicon = require('serve-favicon');
+let logger = require('morgan');
+let bodyParser = require('body-parser');
+let session = require('express-session');
 let cookieParser = require('cookie-parser');
 
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var db = require('./queries');
+let passport = require('passport');
+let LocalStrategy = require('passport-local').Strategy;
+let DigestStrategy = require('passport-http').DigestStrategy;
+let db = require('./queries');
+
+passport.use(new DigestStrategy(
+  {
+    usernameField: 'login',
+    qop: 'auth'
+  },
+
+  function(username, done) {
+
+    db.findUserByLogin(username, function(err, user) {
+
+      if (err) {
+        return done(err);
+      }
+
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username or password.' });
+      }
+
+      return done(null, user, user.password);
+
+    });
+
+  },
+
+  function(params, done) {
+    // validate nonces as necessary
+    done(null, true)
+  }
+));
 
 passport.use(new LocalStrategy(
   {
@@ -48,7 +79,7 @@ passport.deserializeUser(function(id, cb) {
   });
 });
 
-var app = express();
+let app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -74,8 +105,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser('db3bfc5f-6a56-4157-b198-7f4f7ce59831'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-var index = require('./routes/index');
-var users = require('./routes/users');
+let index = require('./routes/index');
+let users = require('./routes/users');
 
 app.use('/', index);
 app.use('/users', users);
@@ -94,8 +125,10 @@ app.use(function(err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  res.status(err.status || 500).json({
+    status: 'error',
+    message: err.message
+  });
 });
 
 module.exports = app;

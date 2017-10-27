@@ -1,4 +1,9 @@
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 let promise = require('bluebird');
+let bcrypt = require('bcryptjs');
+let jwt = require('jsonwebtoken');
+
+let jwtSecretOrKey = '25015c61-030e-452f-a92f-5b8cdb0b627e';
 
 let options = {
   // Initialization Options
@@ -6,7 +11,12 @@ let options = {
 };
 
 let pgp = require('pg-promise')(options);
-let connectionString = 'postgres://avencat:root@localhost:5432/socialnetwork';
+let connectionString = (
+  (process.env.NODE_ENV === 'development') ?
+    'postgres://avencat:root@localhost:5432/socialnetwork'
+  :
+    'postgres://avencat:root@localhost:5432/socialnetworktest'
+);
 let db = pgp(connectionString);
 
 function createComment(req, res, next) {}
@@ -56,6 +66,8 @@ function createUser(req, res, next) {
       });
 
   } else {
+
+    body.password = bcrypt.hashSync(body.password, 10);
 
     db.none('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password)' +
       'values(${firstname}, ${lastname}, ${birthday}, ${email}, ${login}, ${gender}, ${telephone}, ${password})',
@@ -141,7 +153,7 @@ function findUserByLogin(username, cb) {
     })
     .catch((err) => {
 
-      return cb(null, null);
+      return cb(err, null);
 
     })
 
@@ -198,12 +210,52 @@ function getUsers(req, res, next) {
     });
 }
 
+function login(req, res, next) {
+
+  if (!req.body.login || !req.body.password) {
+
+    res.status(400).json({
+      status: 'error',
+      message: 'Login and password needed.',
+    });
+
+  } else {
+
+    findUserByLogin(req.body.login, (err, user) => {
+
+      if (err) {
+
+        res.status(500).json(err);
+
+      } else if (user && bcrypt.compareSync(req.body.password, user.password)) {
+
+        const payload = {id: user.id};
+        const token = jwt.sign(payload, jwtSecretOrKey);
+        res.json({message: "success", token: token});
+
+      } else {
+
+        res.status(401).json({
+          status: 'error',
+          message: 'Incorrect username or password.',
+        });
+
+      }
+
+    });
+
+
+  }
+
+}
+
 function updateComment(req, res, next) {}
+
 function updatePost(req, res, next) {}
 
 function updateUser(req, res, next) {
 
-  const login = /^[a-z0-9_]{6,}$/;
+  const login = /^[a-z0-9_]{5,}$/;
 
   body = {
     firstname: req.body.firstname ? req.body.firstname : null,
@@ -215,7 +267,7 @@ function updateUser(req, res, next) {
     password: req.body.password ? req.body.password : null
   };
 
-  if (body.password.length < 6) {
+  if (body.password && body.password.length < 6) {
 
     res.status(400)
       .json({
@@ -223,15 +275,18 @@ function updateUser(req, res, next) {
         message: 'Password should be at least 6 characters.'
       });
 
-  } else if (!body.login || !login.test(body.login)) {
+  } else if (body.login && !login.test(body.login)) {
 
     res.status(400)
       .json({
         status: 'error',
-        message: 'Login sould be at least 6 characters and use only a-z, 1-9 or _.'
+        message: 'Login sould be at least 5 characters and use only a-z, 1-9 or _.'
       });
 
   } else {
+
+    if (body.password)
+      body.password = bcrypt.hashSync(body.password, 10);
 
     db.none('UPDATE users SET firstname=$1, lastname=$2, birthday=$3, login=$4, gender=$5, telephone=$6, password=$7 WHERE id = $8',
       [body.firstname, body.lastname, body.birthday, body.login, body.gender, body.telephone, body.password, req.user.id])
@@ -273,6 +328,7 @@ module.exports = {
   getSingleUser,
   getUserPosts,
   getUsers,
+  login,
   updateComment,
   updatePost,
   updateUser

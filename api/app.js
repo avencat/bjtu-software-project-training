@@ -9,7 +9,70 @@ let cookieParser = require('cookie-parser');
 let passport = require('passport');
 let LocalStrategy = require('passport-local').Strategy;
 let DigestStrategy = require('passport-http').DigestStrategy;
+let BasicStrategy = require('passport-http').BasicStrategy;
 let db = require('./queries');
+let bcrypt = require('bcryptjs');
+
+// JWT
+let passportJWT = require("passport-jwt");
+let ExtractJwt = passportJWT.ExtractJwt;
+let JwtStrategy = passportJWT.Strategy;
+
+
+let jwtOptions = {};
+jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+jwtOptions.secretOrKey = '25015c61-030e-452f-a92f-5b8cdb0b627e';
+
+passport.use(new JwtStrategy(jwtOptions, function(jwt_payload, next) {
+
+  // usually this would be a database call:
+  db.findUserById(jwt_payload.id, (err, user) => {
+
+    if (err) {
+
+      res.status(500).json(err);
+
+    } else if (user) {
+
+      next(null, user);
+
+    } else {
+
+      next(null, false);
+
+    }
+
+  });
+
+}));
+
+passport.use(new BasicStrategy(
+  {
+    usernameField: 'login'
+  },
+
+  function(username, password, done) {
+
+    db.findUserByLogin(username, function(err, user) {
+
+      if (err) {
+        return done(err);
+      }
+
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username or password.' });
+      }
+
+      if (!bcrypt.compareSync(password, user.password)) {
+        return done(null, false, { message: 'Incorrect username or password.' });
+      }
+
+      return done(null, user);
+
+    });
+
+  }
+));
 
 passport.use(new DigestStrategy(
   {
@@ -101,7 +164,7 @@ app.use(passport.session());
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser('db3bfc5f-6a56-4157-b198-7f4f7ce59831'));
 app.use(express.static(path.join(__dirname, 'public')));
 

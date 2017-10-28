@@ -1,4 +1,14 @@
-import React, { Component } from 'react';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Router, IndexRoute, Route, browserHistory } from 'react-router';
+
+ReactDOM.render(
+    <Router history={browserHistory}>
+    </Router>,
+    document.getElementById('app-container')
+);
+
+/*import React, { Component } from 'react';
 import logoReact from './logo.svg';
 import './App.css';
 import Navbar from './Navbar';
@@ -12,17 +22,6 @@ class App extends Component {
     };
   }
 
-  componentDidMount() {
-    this.fetchPosts();
-  }
-
-  fetchPosts() {
-    fetch().then(data => {
-      this.setState({
-        logo: data.profilePicture
-      });
-    })
-  }
 
   render() {
     return (
@@ -42,3 +41,4 @@ class App extends Component {
 }
 
 export default App;
+*/

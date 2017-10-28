@@ -185,7 +185,7 @@ CREATE FUNCTION sanitize_username_and_email()
     END IF;
 
     IF NEW.login IS NOT NULL THEN
-      NEW.email := lower(trim(NEW.login));
+      NEW.login := lower(trim(NEW.login));
     END IF;
 
     -- Fill the time fields

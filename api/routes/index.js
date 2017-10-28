@@ -45,9 +45,9 @@ router.post('/api/friendship', passport.authenticate('jwt', { session: false }),
 router.post('/api/post/:id/like', passport.authenticate('jwt', { session: false }), db.createLike);
 router.post('/api/post', passport.authenticate('jwt', { session: false }), db.createPost);
 router.post('/api/comment/:id/like', passport.authenticate('jwt', { session: false }), db.createLikeComment);
-router.put('api/comment/:id', passport.authenticate('jwt', { session: false }), db.updateComment);
-router.put('api/post/:id', passport.authenticate('jwt', { session: false }), db.updatePost);
-router.put('api/user/:id', passport.authenticate('jwt', { session: false }), db.updateUser);
+router.put('/api/comment/:id', passport.authenticate('jwt', { session: false }), db.updateComment);
+router.put('/api/post/:id', passport.authenticate('jwt', { session: false }), db.updatePost);
+router.put('/api/user', passport.authenticate('jwt', { session: false }), db.updateUser);
 router.delete('/api/user/:id', passport.authenticate('jwt', { session: false }), db.deleteUser);
 router.delete('/api/post/:id', passport.authenticate('jwt', { session: false }), db.deletePost);
 router.delete('/api/comment/:id', passport.authenticate('jwt', { session: false }), db.deleteComment);

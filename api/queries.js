@@ -1,23 +1,9 @@
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-let promise = require('bluebird');
 let bcrypt = require('bcryptjs');
 let jwt = require('jsonwebtoken');
+let { db } = require('./database');
 
 let jwtSecretOrKey = '25015c61-030e-452f-a92f-5b8cdb0b627e';
 
-let options = {
-  // Initialization Options
-  promiseLib: promise
-};
-
-let pgp = require('pg-promise')(options);
-let connectionString = (
-  (process.env.NODE_ENV === 'development') ?
-    'postgres://avencat:root@localhost:5432/socialnetwork'
-  :
-    'postgres://avencat:root@localhost:5432/socialnetworktest'
-);
-let db = pgp(connectionString);
 
 function createComment(req, res, next) {}
 function createFriendship(req, res, next) {}
@@ -80,6 +66,13 @@ function createUser(req, res, next) {
           });
       })
       .catch(function (err) {
+        if (err.constraint === "users_email_key") {
+          err.status = 400;
+          err.message = "Email taken."
+        } else if (err.constraint === "users_login_key") {
+          err.status = 400;
+          err.message = "Login taken."
+        }
         return next(err);
       });
 
@@ -127,7 +120,7 @@ function deleteUser(req, res, next) {
 
 function findUserById(id, cb) {
 
-  db.one('SELECT * FROM users WHERE id = $1', id)
+  db.oneOrNone('SELECT * FROM users WHERE id = $1', id)
 
     .then((data) => {
 
@@ -144,7 +137,7 @@ function findUserById(id, cb) {
 
 function findUserByLogin(username, cb) {
 
-  db.one('SELECT * FROM users WHERE login = $1', username)
+  db.oneOrNone('SELECT * FROM users WHERE login = $1', username)
 
     .then((data) => {
 
@@ -221,7 +214,7 @@ function login(req, res, next) {
 
   } else {
 
-    findUserByLogin(req.body.login, (err, user) => {
+    findUserByLogin(req.body.login.trim().toLowerCase(), (err, user) => {
 
       if (err) {
 
@@ -280,7 +273,7 @@ function updateUser(req, res, next) {
     res.status(400)
       .json({
         status: 'error',
-        message: 'Login sould be at least 5 characters and use only a-z, 1-9 or _.'
+        message: 'Login should be at least 5 characters and use only a-z, 1-9 or _.'
       });
 
   } else {
@@ -288,7 +281,7 @@ function updateUser(req, res, next) {
     if (body.password)
       body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none('UPDATE users SET firstname=$1, lastname=$2, birthday=$3, login=$4, gender=$5, telephone=$6, password=$7 WHERE id = $8',
+    db.none('UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), gender=COALESCE($5, gender), telephone=COALESCE($6, telephone), password=COALESCE($7, password) WHERE id = $8',
       [body.firstname, body.lastname, body.birthday, body.login, body.gender, body.telephone, body.password, req.user.id])
       .then(() => {
         res.status(201)

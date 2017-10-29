@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Profile from './components/Profile';
-import Register from './components/Register';
-import Login from './components/Login';
-import Home from './components/Home';
+import Profile from './views/Profile';
+import Register from './views/Register';
+import Login from './views/Login';
+import Home from './views/Home';
 import { Router, Route, browserHistory } from 'react-router';
 
 const Root = () => {

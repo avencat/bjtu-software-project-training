@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Nav from '../Navbar';
+import Nav from '../components/Navbar';
 
 class Profile extends Component {
 

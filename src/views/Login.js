@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Nav from '../Navbar';
+import Nav from '../components/Navbar';
 import 'whatwg-fetch';
 
 class Login extends Component {
@@ -29,7 +29,7 @@ class Login extends Component {
     const { login, password } = this.state;
 
 
-    fetch("http://192.168.31.244:3001/api/login", {
+      fetch("http://localhost:3001/api/login", {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -42,8 +42,8 @@ class Login extends Component {
     }).then((data) => {
       return data.json()
     }).then((data) => {
-      sessionStorage.setItem("userToken", data.token)
-      console.log(data)
+      sessionStorage.setItem("userToken", data.token);
+      console.log(data);
       if (data.status === "success") {
         this.props.router.push('/Profile');
       }
@@ -57,28 +57,47 @@ class Login extends Component {
     const { login, password} = this.state;
     return (
       <div>
+
         <Nav location={this.props.location}/>
+
         <div className="col-sm-12">
+
           <div className="jumbotron text-center">
+
             <h2>Login</h2>
-            <form onSubmit={this.onSubmit}>
-              <div>
-                <label>
-                  Email :
-                </label>
-                <input required={true} type="login" id="login" value={login} name='login' onChange={this.onChange} />
+
+            <form className="form-horizontal" onSubmit={this.onSubmit}>
+
+              <div className="form-group">
+                <span className="col-sm-3"/>
+
+                <label className="control-label col-sm-2" htmlFor="login">Username :</label>
+
+                <div className="col-sm-4">
+                  <input className="form-control" required={true} type="text" id="login" value={login} name='login' onChange={this.onChange} />
+                </div>
+
+                <span className="col-sm-3"/>
               </div>
-              <div>
-                <label>
-                  Password :
-                </label>
-                <input required={true} type="password" id="password" value={password} name='password' onChange={this.onChange} />
+
+              <div className="form-group">
+                <span className="col-sm-3"/>
+
+                <label className="control-label col-sm-2" htmlFor="password">Password :</label>
+
+                <div className="col-sm-4">
+                  <input className="form-control" required={true} type="password" id="password" value={password} name='password' onChange={this.onChange} />
+                </div>
+
+                <span className="col-sm-3"/>
               </div>
+
               <div>
                 <input className="btn btn-lg btn-success" type="submit" value="Submit" />
               </div>
 
             </form>
+
           </div>
         </div>
       </div>

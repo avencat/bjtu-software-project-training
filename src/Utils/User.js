@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 
-class User extends Component {
+export default class User extends Component {
 
-    var isConnected: false;
+  isConnected = false;
 
 }
-
-export default User;

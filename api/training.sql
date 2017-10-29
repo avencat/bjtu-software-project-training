@@ -5,18 +5,17 @@ CREATE DATABASE socialnetwork;
 
 CREATE TABLE      users (
   id              SERIAL PRIMARY KEY,
-  firstname       VARCHAR,
-  lastname        VARCHAR,
+  firstname       TEXT,
+  lastname        TEXT,
   birthday        DATE,
-  email           VARCHAR UNIQUE NOT NULL,
-  login           VARCHAR UNIQUE NOT NULL,
+  email           TEXT UNIQUE NOT NULL,
+  login           TEXT UNIQUE NOT NULL,
   gender          SMALLINT,
-  telephone       VARCHAR UNIQUE,
-  password        VARCHAR NOT NULL,
+  telephone       TEXT UNIQUE,
+  password        TEXT NOT NULL,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  CONSTRAINT      login_min_length CHECK (length(login) >= 5),
-  CONSTRAINT      pwd_min_length CHECK (length(password) >= 6)
+  CONSTRAINT      login_min_length CHECK (length(login) >= 5)
 );
 
 CREATE INDEX      fullname ON users (firstname, lastname);
@@ -78,7 +77,7 @@ CREATE TABLE      comment_likes (
 
 CREATE TABLE      gender (
   id              SERIAL PRIMARY KEY,
-  title           VARCHAR NOT NULL,
+  title           TEXT NOT NULL,
   description     TEXT,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ

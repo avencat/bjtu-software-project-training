@@ -137,7 +137,7 @@ describe('Testing users methods', function () {
       .send({
         'login': 'userTest2',
       })
-      .expect(201, done);
+      .expect(200, done);
   });
 
 });

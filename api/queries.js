@@ -289,7 +289,7 @@ function updateUser(req, res, next) {
     db.none('UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), gender=COALESCE($5, gender), telephone=COALESCE($6, telephone), password=COALESCE($7, password) WHERE id = $8',
       [body.firstname, body.lastname, body.birthday, body.login, body.gender, body.telephone, body.password, req.user.id])
       .then(() => {
-        res.status(201)
+        res.status(200)
           .json({
             status: 'success',
             message: 'Updated one user'

@@ -35,6 +35,7 @@ router.get('/api/logout',
 router.get('/api', passport.authenticate('jwt', { session: false }), db.getAllPosts);
 router.get('/api/users', passport.authenticate('jwt', { session: false }), db.getUsers);
 router.get('/api/user/:id', passport.authenticate('jwt', { session: false }), db.getSingleUser);
+router.get('/api/user', passport.authenticate('jwt', { session: false }), db.getSingleUser);
 router.get('/api/user/:id/posts', passport.authenticate('jwt', { session: false }), db.getUserPosts);
 router.get('/api/user/:id/friendships', passport.authenticate('jwt', { session: false }), db.getFriendships);
 router.get('/api/post/:id/comments', passport.authenticate('jwt', { session: false }), db.getComments);

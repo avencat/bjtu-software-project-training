@@ -161,16 +161,16 @@ function getUserPosts(req, res, next) {}
 
 function getSingleUser(req, res, next) {
 
-  const userId = parseInt(req.params.id);
+  const userId = req.params.id ? parseInt(req.params.id) : req.user.id;
 
-  db.one('SELECT id, firstname, lastname, birthday, email, gender, telephone FROM users WHERE id = $1', userId)
+  db.one('SELECT id, login, firstname, lastname, birthday, email, gender, telephone FROM users WHERE id = $1', userId)
 
     .then(function (data) {
 
       res.status(200)
         .json({
           status: 'success',
-          data: data,
+          user: data,
           message: 'Retrieved ONE user'
         });
 
@@ -224,7 +224,12 @@ function login(req, res, next) {
 
         const payload = {id: user.id};
         const token = jwt.sign(payload, jwtSecretOrKey);
-        res.json({message: "success", token: token});
+        res.json({
+          status: "success",
+          message: "User successfully logged in.",
+          token: token,
+          userId: user.id
+        });
 
       } else {
 

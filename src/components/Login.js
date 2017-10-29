@@ -8,7 +8,7 @@ class Login extends Component {
     super();
     this.state = {
       login: '',
-      password: '',
+      password: ''
     };
 
     this.onChange = this.onChange.bind(this);
@@ -29,7 +29,7 @@ class Login extends Component {
     const { login, password } = this.state;
 
 
-    fetch("http://192.168.31.244:3001/", {
+    fetch("http://192.168.31.244:3001/api/login", {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -39,11 +39,17 @@ class Login extends Component {
         "login": login,
         "password": password,
       })
-    })
-
-  }
-
-  componentDidMount() {
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+      sessionStorage.setItem("userToken", data.token)
+      console.log(data)
+      if (data.status === "success") {
+        this.props.router.push('/Profile');
+      }
+    }).catch((err) => {
+      console.log(err)
+    });
 
   }
 
@@ -51,10 +57,7 @@ class Login extends Component {
     const { login, password} = this.state;
     return (
       <div>
-        <Nav />
-        <h3 className="text-center">Register</h3>
-        <hr/>
-
+        <Nav location={this.props.location}/>
         <div className="col-sm-12">
           <div className="jumbotron text-center">
             <h2>Login</h2>
@@ -63,13 +66,13 @@ class Login extends Component {
                 <label>
                   Email :
                 </label>
-                <input type="login" id="login" value={login} name='login' onChange={this.onChange} />
+                <input required={true} type="login" id="login" value={login} name='login' onChange={this.onChange} />
               </div>
               <div>
                 <label>
                   Password :
                 </label>
-                <input type="password" id="password" value={password} name='password' onChange={this.onChange} />
+                <input required={true} type="password" id="password" value={password} name='password' onChange={this.onChange} />
               </div>
               <div>
                 <input className="btn btn-lg btn-success" type="submit" value="Submit" />

@@ -4,9 +4,58 @@ import './App.css';
 
 export default class Nav extends Component {
 
-    render() {
-        return (
-            <nav className="navbar navbar-default">
+  constructor(props) {
+    super(props);
+
+    this.onLogout = this.onLogout.bind(this);
+  }
+
+  componentWillMount() {
+    const isLoggedIn = sessionStorage.getItem("userToken");
+
+    this.MyButton = (
+      <li><button className="btn btn-info log">
+        <Link to="/login">
+          Log In
+        </Link>
+      </button></li>
+    );
+
+    if (isLoggedIn) {
+
+      this.MyButton = (
+        <li>
+          <button onClick={this.onLogout} className="btn btn-danger log">
+            <Link to="/login">
+              Log out
+            </Link>
+          </button>
+        </li>
+      )
+
+    } else if (this.props.location && this.props.location.pathname === '/login') {
+
+      this.MyButton = (
+        <li>
+          <button className="btn log">
+            <Link to="/Register">
+              Register
+            </Link>
+          </button>
+        </li>
+      );
+
+    }
+  }
+
+  onLogout() {
+    sessionStorage.removeItem("userToken")
+    // TODO call server function to delete the token on the server too
+  }
+  render() {
+    return (
+      <nav className="navbar navbar-default">
+        {/*
               <div className="navbar-header">
                 <Link className="navbar-brand" to="/">Home</Link>
               </div>
@@ -15,56 +64,13 @@ export default class Nav extends Component {
                   <Link to="/">Profile</Link>
                 </li>
                 <li>
-                  <Link to="/special">Parameters</Link>
+                  <Link to="/Register">Register</Link>
                 </li>
-              </ul>
-              <ul className="nav navbar-nav navbar-right">
-                <li><button className="btn btn-info log">
-                    <Link to="/login">
-                    Log In
-                    </Link>
-                </button></li>
-                <li><button className="btn btn-danger log">
-                    <Link to="/login">
-                    Log out
-                    </Link>
-                </button></li>
-              </ul>
-            </nav>
-        );
-    }
-}
-/*
-
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-
-export default class Navbar extends Component {
-  render() {
-    return (
-      <div>
-        <ul>
-          <li style={styles.homeButton}>Home</li>
-          <li>Profile</li>
-          <li>Parameters</li>
-          <li>{this.props.anotherButton}</li>
+              </ul>*/}
+        <ul className="nav navbar-nav navbar-right">
+          {this.MyButton}
         </ul>
-      </div>
+      </nav>
     );
   }
 }
-
-const styles = {
-  homeButton: {
-    backgroundColor:  'blue',
-    fontSize:         25,
-  }
-};
-
-Navbar.propTypes = {
-  anotherButton:  PropTypes.string.isRequired
-};
-
-Navbar.defaultProps = {
-  anotherButton:  'Default'
-};*/

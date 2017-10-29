@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Nav from '../components/Navbar';
+import UserForm from '../components/UserForm';
 import 'whatwg-fetch';
-import { Redirect } from 'react-router';
 
 class Register extends Component {
 
@@ -14,8 +14,7 @@ class Register extends Component {
       firstname:'',
       lastname:'',
       password: '',
-      confirmedPassword:'',
-      redirect: false
+      confirmedPassword:''
     };
 
     this.onChange = this.onChange.bind(this);
@@ -77,7 +76,7 @@ class Register extends Component {
   }
 
   render() {
-    const { login, firstname, lastname, email, password, confirmedPassword, redirect } = this.state;
+    const { login, firstname, lastname, email, password, confirmedPassword } = this.state;
 
     return (
       <div>
@@ -90,85 +89,24 @@ class Register extends Component {
 
             <h2>Register</h2>
 
-            <form className="form-horizontal" onSubmit={this.onSubmit}>
+            <UserForm
 
-              <div className="form-group">
-                <span className="col-sm-1"/>
+              emailRequired
+              loginRequired
+              passwordRequired
 
-                <label className="control-label col-sm-2" htmlFor="login">Username :</label>
+              email={email}
+              login={login}
+              lastname={lastname}
+              password={password}
+              firstname={firstname}
+              confirmedPassword={confirmedPassword}
 
-                <div className="col-sm-8">
-                  <input className="form-control" required={true} value={login} name='login' id="login" onChange={this.onChange}/>
-                </div>
+              onChange={this.onChange.bind(this)}
+              onSubmit={this.onSubmit.bind(this)}
 
-                <span className="col-sm-1"/>
-              </div>
+            />
 
-              <div className="form-group">
-                <span className="col-sm-1"/>
-
-                <label className="control-label col-sm-2" htmlFor="firstname">First name :</label>
-
-                <div className="col-sm-8">
-                  <input className="form-control" value={firstname} name='firstname' id="firstname" onChange={this.onChange}/>
-                </div>
-
-                <span className="col-sm-1"/>
-              </div>
-
-              <div className="form-group">
-                <span className="col-sm-1"/>
-
-                <label className="control-label col-sm-2" htmlFor="lastname">Last name :</label>
-
-                <div className="col-sm-8">
-                  <input className="form-control" value={lastname} name='lastname' id="lastname" onChange={this.onChange}/>
-                </div>
-
-                <span className="col-sm-1"/>
-              </div>
-
-              <div className="form-group">
-                <span className="col-sm-1"/>
-
-                <label className="control-label col-sm-2" htmlFor="email">Email :</label>
-
-                <div className="col-sm-8">
-                  <input className="form-control" required={true} type="email" value={email} name='email' id="email" onChange={this.onChange}/>
-                </div>
-
-                <span className="col-sm-1"/>
-              </div>
-
-              <div className="form-group">
-                <span className="col-sm-1"/>
-
-                <label className="control-label col-sm-2" htmlFor="password">Password :</label>
-
-                <div className="col-sm-8">
-                  <input className="form-control" required={true} type="password" value={password} name='password' id="password" onChange={this.onChange}/>
-                </div>
-
-                <span className="col-sm-1"/>
-              </div>
-
-              <div className="form-group">
-                <span className="col-sm-1"/>
-
-                <label className="control-label col-sm-2" htmlFor="confirmedPassword">Confirm password :</label>
-
-                <div className="col-sm-8">
-                  <input className="form-control" required={true} type="password" value={confirmedPassword} name='confirmedPassword' id="confirmedPassword" onChange={this.onChange}/>
-                </div>
-
-                <span className="col-sm-1"/>
-              </div>
-
-              <div>
-                <input className="btn btn-lg btn-success" type="submit" value="Submit"/>
-              </div>
-
-            </form>
           </div>
         </div>
       </div>

@@ -176,29 +176,87 @@ $trigger_manage_comment_likes_nb$ LANGUAGE plpgsql;
 CREATE FUNCTION sanitize_username_and_email()
   RETURNS TRIGGER AS $trigger_sanitize_username_and_email$
 
-  BEGIN
+BEGIN
 
-    -- trim and lower email and login
-    IF NEW.email IS NOT NULL THEN
-      NEW.email := lower(trim(NEW.email));
-    END IF;
+  -- trim and lower email and login
+  IF NEW.email IS NOT NULL THEN
+    NEW.email := lower(trim(NEW.email));
+  END IF;
 
-    IF NEW.login IS NOT NULL THEN
-      NEW.login := lower(trim(NEW.login));
-    END IF;
+  IF NEW.login IS NOT NULL THEN
+    NEW.login := lower(trim(NEW.login));
+  END IF;
 
-    -- Fill the time fields
-    IF (TG_OP = 'INSERT') THEN
-      NEW.created := current_timestamp;
-    END IF;
-    NEW.updated := current_timestamp;
+  -- Fill the time fields
+  IF (TG_OP = 'INSERT') THEN
+    NEW.created := current_timestamp;
+  END IF;
+  NEW.updated := current_timestamp;
 
-    RETURN NEW;
+  RETURN NEW;
 
-  END
+END
 
 $trigger_sanitize_username_and_email$LANGUAGE plpgsql;
 
+
+CREATE FUNCTION manage_posts()
+  RETURNS TRIGGER AS $trigger_manage_posts$
+
+BEGIN
+
+  -- Check that author_id is given
+  IF NEW.author_id IS NULL THEN
+    RAISE EXCEPTION 'author_id cannot be null.';
+  END IF;
+
+  -- Fill the time fields
+  IF (TG_OP = 'INSERT') THEN
+    NEW.created := current_timestamp;
+  END IF;
+  NEW.updated := current_timestamp;
+
+  RETURN NEW;
+
+END
+
+$trigger_manage_posts$LANGUAGE plpgsql;
+
+
+CREATE FUNCTION manage_comments()
+  RETURNS TRIGGER AS $trigger_manage_comments$
+
+BEGIN
+
+  -- Check that author_id && post_id are given
+  IF NEW.author_id IS NULL THEN
+    RAISE EXCEPTION 'author_id cannot be null.';
+  ELSEIF NEW.post_id IS NULL THEN
+    RAISE EXCEPTION 'post_id cannot be null.';
+  END IF;
+
+  -- Fill the time fields
+  IF (TG_OP = 'INSERT') THEN
+    NEW.created := current_timestamp;
+  END IF;
+  NEW.updated := current_timestamp;
+
+  RETURN NEW;
+
+END
+
+$trigger_manage_comments$LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trigger_manage_posts
+  BEFORE INSERT OR UPDATE ON posts
+  FOR EACH ROW
+  EXECUTE PROCEDURE manage_posts();
+
+CREATE TRIGGER trigger_manage_comments
+  BEFORE INSERT OR UPDATE ON comments
+  FOR EACH ROW
+  EXECUTE PROCEDURE manage_comments();
 
 CREATE TRIGGER trigger_manage_comments_nb
   AFTER INSERT OR DELETE ON comments

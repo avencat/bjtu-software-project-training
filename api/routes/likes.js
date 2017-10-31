@@ -9,7 +9,7 @@ let db = require('../queries/likes');
  * @apiName GetLikes
  * @apiGroup Like
  *
- * @apiParam {Number} post_id   [Optional] Post unique ID (Primary key).
+ * @apiParam {Number} post_id   [Mandatory] Post unique ID (Primary key).
  *
  * @apiExample {js} Fetch example:
  *   fetch("http://localhost:3001/likes?post_id=" + some_post_id, {

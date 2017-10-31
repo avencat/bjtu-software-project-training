@@ -31,7 +31,7 @@ function createLikeComment(req, res, next) {
           .json({
 
             status: 'success',
-            message: 'Inserted one like from user ' + body.author_id + ' to comment ' + body.comment_id
+            message: 'Inserted one like to comment ' + body.comment_id
 
           });
 
@@ -74,7 +74,7 @@ function deleteLikeComment(req, res, next) {
             .json({
 
               status: 'success',
-              message: `Removed like ${like_id}`
+              message: `Removed likeComment ${like_id}`
 
             });
           /* jshint ignore:end */
@@ -115,7 +115,11 @@ function getLikeComments(req, res, next) {
 
     const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.post_id, comment_likes.created, comment_likes.updated, users.login, users.firstname, users.lastname FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id WHERE comment_likes.post_id = $1', post_id)
+    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.post_id, comment_likes.created, comment_likes.updated,' +
+      'users.login, users.firstname, users.lastname' +
+      'FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id' +
+      'WHERE comment_likes.post_id = $1',
+      post_id)
 
       .then((data) => {
 
@@ -137,7 +141,7 @@ function getLikeComments(req, res, next) {
 
             status: 'success',
             data,
-            message: 'Retrieved likes'
+            message: 'Retrieved Likes of Comment'
 
           });
 

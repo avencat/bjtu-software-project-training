@@ -61,7 +61,7 @@ let db = require('../queries/posts');
 router.get('/', passport.authenticate('jwt', { session: false }), db.getAllPosts);
 
 /**
- * @api {get} /posts/comments Request Posts list.
+ * @api {get} /posts/comments Request Posts list with comments.
  * @apiName GetPostsWithComments
  * @apiGroup Post
  *

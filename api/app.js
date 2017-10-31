@@ -179,10 +179,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 let index = require('./routes/index');
 let users = require('./routes/users');
 let posts = require('./routes/posts');
+let comments = require('./routes/comments');
+let friendships = require('./routes/friendships');
 
 app.use('/', index);
 app.use('/users', users);
 app.use('/posts', posts);
+app.use('/comments', comments);
+app.use('/friendships', friendships);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

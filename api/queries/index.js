@@ -1,8 +1,6 @@
 let { db } = require('../database');
 
 
-function createFriendship(req, res, next) {}
-
 function createLike(req, res, next) {
 
   body = {
@@ -86,8 +84,6 @@ function createLikeComment(req, res, next) {
   }
 
 }
-
-function deleteFriendship(req, res, next) {}
 
 function deleteLike(req, res, next) {
 
@@ -215,19 +211,15 @@ function findCommentLikeById(id, cb) {
 
 }
 
-function getFriendships(req, res, next) {}
 function getLikes(req, res, next) {}
 
 // Add query functions
 module.exports = {
-  createFriendship,
   createLike,
   createLikeComment,
-  deleteFriendship,
   deleteLike,
   deleteLikeComment,
   findCommentLikeById,
   findLikeById,
-  getFriendships,
   getLikes
 };

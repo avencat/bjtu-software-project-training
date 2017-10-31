@@ -165,6 +165,8 @@ function serializePost(data) {
   return ({
     id: data.id,
     content: data.content,
+    likes_nb: data.likes_nb,
+    comments_nb: data.comments_nb,
     user: {
       id: data.author_id,
       login: data.login,
@@ -189,7 +191,7 @@ function getSinglePost(req, res, next) {
 
   const post_id = parseInt(req.params.id);
 
-  db.one('SELECT posts.id, posts.content, posts.author_id, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id WHERE posts.id = $1', post_id)
+  db.one('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id WHERE posts.id = $1', post_id)
 
     .then((data) => serializePost(data))
     .then((data) => {

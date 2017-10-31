@@ -106,7 +106,87 @@ function findLikeCommentsById(id, cb) {
 
 }
 
-function getLikeComments(req, res, next) {}
+function getLikeComments(req, res, next) {
+
+  if (req.query.post_id) {
+
+    const post_id = parseInt(req.query.post_id);
+
+    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.post_id, users.login, users.firstname, users.lastname FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id WHERE comment_likes.post_id = $1', post_id)
+
+      .then((data) => {
+
+        if (Array.isArray(data)) {
+
+          return (serializeCommentLikes(data));
+
+        } else {
+
+          return (serializeCommentLike(data));
+
+        }
+
+      })
+      .then((data) => {
+
+        res.status(200)
+          .json({
+
+            status: 'success',
+            data,
+            message: 'Retrieved likes'
+
+          });
+
+      })
+      .catch(function (err) {
+
+        return next(err);
+
+      });
+
+  } else {
+
+    res.status(400)
+      .json({
+
+        status: 'error',
+        message: 'post_id not provided.'
+
+      });
+
+  }
+
+}
+
+function serializeCommentLikes(data) {
+
+  let newData = [];
+
+  for (let i = 0, len = data.length; i < len; i++) {
+
+    newData.push(serializeCommentLike(data[i]));
+
+  }
+
+  return (newData);
+
+}
+
+function serializeCommentLike(data) {
+
+  return ({
+    id: data.id,
+    comment_id: data.comment_id,
+    user: {
+      id: data.user_id,
+      login: data.login,
+      firstname: data.firstname,
+      lastname: data.lastname
+    }
+  });
+
+}
 
 // Add query functions
 module.exports = {

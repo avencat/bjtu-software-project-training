@@ -112,9 +112,9 @@ function getComments(req, res, next) {
 
   if (req.query.post_id) {
 
-    const user_id = parseInt(req.query.post_id);
+    const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT comments.id, comments.content, comments.author_id, comments.post_id, users.login, users.firstname, users.lastname FROM comments INNER JOIN users ON comments.author_id = users.id WHERE posts.post_id = $1', user_id)
+    db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, users.login, users.firstname, users.lastname FROM comments INNER JOIN users ON comments.author_id = users.id WHERE comments.post_id = $1', post_id)
 
       .then((data) => {
 
@@ -136,7 +136,7 @@ function getComments(req, res, next) {
 
             status: 'success',
             data,
-            message: 'Retrieved posts'
+            message: 'Retrieved comments'
 
           });
 
@@ -180,6 +180,7 @@ function serializeComment(data) {
     id: data.id,
     content: data.content,
     post_id: data.post_id,
+    likes_nb: data.likes_nb,
     user: {
       id: data.author_id,
       login: data.login,

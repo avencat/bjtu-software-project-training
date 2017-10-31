@@ -106,7 +106,87 @@ function findLikeById(id, cb) {
 
 }
 
-function getLikes(req, res, next) {}
+function getLikes(req, res, next) {
+
+  if (req.query.post_id) {
+
+    const post_id = parseInt(req.query.post_id);
+
+    db.any('SELECT post_likes.id, post_likes.user_id, post_likes.post_id, users.login, users.firstname, users.lastname FROM post_likes INNER JOIN users ON post_likes.user_id = users.id WHERE post_likes.post_id = $1', post_id)
+
+      .then((data) => {
+
+        if (Array.isArray(data)) {
+
+          return (serializeLikes(data));
+
+        } else {
+
+          return (serializeLike(data));
+
+        }
+
+      })
+      .then((data) => {
+
+        res.status(200)
+          .json({
+
+            status: 'success',
+            data,
+            message: 'Retrieved likes'
+
+          });
+
+      })
+      .catch(function (err) {
+
+        return next(err);
+
+      });
+
+  } else {
+
+    res.status(400)
+      .json({
+
+        status: 'error',
+        message: 'post_id not provided.'
+
+      });
+
+  }
+
+}
+
+function serializeLikes(data) {
+
+  let newData = [];
+
+  for (let i = 0, len = data.length; i < len; i++) {
+
+    newData.push(serializeLike(data[i]));
+
+  }
+
+  return (newData);
+
+}
+
+function serializeLike(data) {
+
+  return ({
+    id: data.id,
+    post_id: data.post_id,
+    user: {
+      id: data.user_id,
+      login: data.login,
+      firstname: data.firstname,
+      lastname: data.lastname
+    }
+  });
+
+}
 
 // Add query functions
 module.exports = {

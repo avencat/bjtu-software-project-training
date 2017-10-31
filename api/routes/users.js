@@ -13,6 +13,7 @@ router.get('/all', passport.authenticate('jwt', { session: false }), db.getUsers
 
 router.post('/login', db.login);
 router.post('/register', db.createUser);
+router.post('/logout', function(req, res, next){ req.logout() });
 
 router.put('/', passport.authenticate('jwt', { session: false }), db.updateUser);
 router.put('/:id', passport.authenticate('jwt', { session: false }), db.updateUser);

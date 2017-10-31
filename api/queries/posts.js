@@ -105,8 +105,61 @@ function findPostById(id, cb) {
 
 }
 
-function getAllPosts(req, res, next) {}
-function getSinglePost(req, res, next) {}
+function getAllPosts(req, res, next) {
+
+  res.status(500).json({status: "error", message: "Not implemented yet"});
+
+}
+
+function serializePost(data) {
+
+  return ({
+    id: data.id,
+    content: data.content,
+    user: {
+      id: data.author_id,
+      login: data.login,
+      firstname: data.firstname,
+      lastname: data.lastname
+    }
+  });
+
+}
+
+function getSinglePost(req, res, next) {
+
+  if (!req.params.id) {
+
+    res.status(400)
+      .json({
+        status: 'error',
+        message: 'id not specified'
+      });
+
+  }
+
+  const post_id = parseInt(req.params.id);
+
+  db.one('SELECT posts.id, posts.content, posts.author_id, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id WHERE posts.id = $1', post_id)
+
+    .then((data) => serializePost(data))
+    .then((data) => {
+
+      res.status(200)
+        .json({
+          status: 'success',
+          data,
+          message: 'Retrieved one post'
+        });
+
+    })
+    .catch(function (err) {
+
+      return next(err);
+
+    });
+
+}
 
 function updatePost(req, res, next) {
 

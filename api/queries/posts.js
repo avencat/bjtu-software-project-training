@@ -110,7 +110,7 @@ function findPostById(id, cb) {
 
 function getAllPosts(req, res, next) {
 
-  let request = 'SELECT posts.id, posts.content, posts.author_id, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id';
+  let request = 'SELECT posts.id, posts.content, posts.author_id, posts.created, posts.updated, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id';
 
   if (req.query.author_id) {
 
@@ -120,7 +120,7 @@ function getAllPosts(req, res, next) {
 
   const user_id = parseInt(req.query.author_id);
 
-  db.any(request, user_id)
+  db.any(request + ' ORDER BY posts.created', user_id)
 
     .then((data) => {
 
@@ -170,6 +170,8 @@ function serializePost(data) {
     content: data.content,
     likes_nb: data.likes_nb,
     comments_nb: data.comments_nb,
+    created: data.created,
+    updated: data.updated,
     user: {
       id: data.author_id,
       login: data.login,
@@ -194,7 +196,7 @@ function getSinglePost(req, res, next) {
 
   const post_id = parseInt(req.params.id);
 
-  db.one('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id WHERE posts.id = $1', post_id)
+  db.one('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id WHERE posts.id = $1 ORDER BY posts.created', post_id)
 
     .then((data) => serializePost(data))
     .then((data) => {

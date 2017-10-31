@@ -115,7 +115,7 @@ function getLikes(req, res, next) {
 
     const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT post_likes.id, post_likes.user_id, post_likes.post_id, users.login, users.firstname, users.lastname FROM post_likes INNER JOIN users ON post_likes.user_id = users.id WHERE post_likes.post_id = $1', post_id)
+    db.any('SELECT post_likes.id, post_likes.user_id, post_likes.post_id, post_likes.created, post_likes.updated, users.login, users.firstname, users.lastname FROM post_likes INNER JOIN users ON post_likes.user_id = users.id WHERE post_likes.post_id = $1', post_id)
 
       .then((data) => {
 
@@ -181,6 +181,8 @@ function serializeLike(data) {
   return ({
     id: data.id,
     post_id: data.post_id,
+    created: data.created,
+    updated: data.updated,
     user: {
       id: data.user_id,
       login: data.login,

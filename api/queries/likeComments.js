@@ -115,7 +115,7 @@ function getLikeComments(req, res, next) {
 
     const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.post_id, users.login, users.firstname, users.lastname FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id WHERE comment_likes.post_id = $1', post_id)
+    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.post_id, comment_likes.created, comment_likes.updated, users.login, users.firstname, users.lastname FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id WHERE comment_likes.post_id = $1', post_id)
 
       .then((data) => {
 
@@ -181,6 +181,8 @@ function serializeCommentLike(data) {
   return ({
     id: data.id,
     comment_id: data.comment_id,
+    created: data.created,
+    updated: data.updated,
     user: {
       id: data.user_id,
       login: data.login,

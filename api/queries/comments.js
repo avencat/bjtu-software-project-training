@@ -117,7 +117,7 @@ function getComments(req, res, next) {
 
     const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, users.login, users.firstname, users.lastname FROM comments INNER JOIN users ON comments.author_id = users.id WHERE comments.post_id = $1 ORDER BY comments.created', post_id)
+    db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, users.login, users.firstname, users.lastname FROM comments INNER JOIN users ON comments.author_id = users.id WHERE comments.post_id = $1 ORDER BY comments.created DESC', post_id)
 
       .then((data) => {
 

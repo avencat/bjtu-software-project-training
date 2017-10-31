@@ -61,6 +61,124 @@ let db = require('../queries/posts');
 router.get('/', passport.authenticate('jwt', { session: false }), db.getAllPosts);
 
 /**
+ * @api {get} /posts/comments Request Posts list.
+ * @apiName GetPostsWithComments
+ * @apiGroup Post
+ *
+ * @apiParam {Number} author_id   [Optional] Author unique ID (Primary key).
+ *
+ * @apiExample {js} Fetch without author_id example:
+ *   fetch("http://localhost:3001/posts/comments" {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ * @apiExample {js} Fetch with author_id example:
+ *   fetch("http://localhost:3001/posts/comments?author_id=" + some_user_id, {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ *
+ * @apiSuccess {String} status      Success status.
+ * @apiSuccess {String} message     Success message.
+ * @apiSuccess {Object} data        Content of the Posts with comments.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "status": "success",
+ *       "data": [
+ *         {
+ *            "id": 1,
+ *            "content": "Lorem ipsum...",
+ *            "likes_nb": "0",
+ *            "comments_nb": "3",
+ *            "created": "2017-10-30T16:18:43.806Z",
+ *            "updated": "2017-10-30T16:18:43.806Z",
+ *            "comments": [
+ *              {
+ *                 "id": 1,
+ *                 "content": "Lorem ipsum bis...",
+ *                 "post_id": "1",
+ *                 "likes_nb": "0",
+ *                 "created": "2017-10-31T16:22:43.806Z",
+ *                 "updated": "2017-10-31T16:22:43.806Z",
+ *                 "user": {
+ *                   "id": "34",
+ *                   "login": "test1",
+ *                   "firstname": "test1",
+ *                   "lastname": "1tset"
+ *                 }
+ *              },
+ *              {
+ *                 "id": 2,
+ *                 "content": "Lorem ipsum ter...",
+ *                 "post_id": "1",
+ *                 "likes_nb": "0",
+ *                 "created": "2017-10-31T16:22:50.864Z",
+ *                 "updated": "2017-10-31T16:22:50.864Z",
+ *                 "user": {
+ *                   "id": "36",
+ *                   "login": "test3",
+ *                   "firstname": "test3",
+ *                   "lastname": "3tset"
+ *                 }
+ *              }
+ *            ],
+ *            "user": {
+ *              "id": "1",
+ *              "login": "test",
+ *              "firstname": "test",
+ *              "lastname": "tset"
+ *            }
+ *         },
+ *         {
+ *            "id": 3,
+ *            "content": "Lorem ipsum bis...",
+ *            "likes_nb": "0",
+ *            "comments_nb": "0",
+ *            "created": "2017-10-31T16:18:43.806Z",
+ *            "updated": "2017-10-31T16:18:43.806Z",
+ *            "comments": null,
+ *            "user": {
+ *              "id": "1",
+ *              "login": "test",
+ *              "firstname": "test",
+ *              "lastname": "tset"
+ *            }
+ *         },
+ *       ],
+ *       "message": "Retrieved posts with comments"
+ *     }
+ *
+ *
+ * @apiError PostNotFound The id of the Post was not found.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "status": "error",
+ *       "message": "Posts not found"
+ *     }
+ */
+router.get('/comments', passport.authenticate('jwt', { session: false }), db.getAllPostsWithComments);
+
+/**
  * @api {get} /posts/:id Request specific Post information.
  * @apiName GetPost
  * @apiGroup Post

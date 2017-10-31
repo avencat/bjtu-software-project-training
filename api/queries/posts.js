@@ -1,4 +1,5 @@
 let { db } = require('../database');
+let commentsQueries = require('./comments');
 
 
 function createPost(req, res, next) {
@@ -108,9 +109,85 @@ function findPostById(id, cb) {
 
 }
 
+function getAllCommentsForPost(id) {
+
+  id = parseInt(id);
+
+  return(db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
+    'users.login, users.firstname, users.lastname ' +
+    'FROM comments INNER JOIN users ON comments.author_id = users.id ' +
+    'WHERE comments.post_id = $1 ' +
+    'ORDER BY comments.created ASC',
+    id)
+    .then(data => {
+
+      if (Array.isArray(data)) {
+
+        return (commentsQueries.serializeComments(data));
+
+      } else {
+
+        return (commentsQueries.serializeComment(data));
+
+      }
+
+    }));
+}
+
+function getAllPostsWithComments(req, res, next) {
+
+  let request = 'SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
+    'users.login, users.firstname, users.lastname ' +
+    'FROM posts INNER JOIN users ON posts.author_id = users.id';
+
+  if (req.query.author_id) {
+
+    request += ' WHERE posts.author_id = $1';
+
+  }
+
+  const user_id = parseInt(req.query.author_id);
+
+  db.any(request + ' ORDER BY posts.id DESC, posts.created DESC', user_id)
+
+    .then((data) => {
+
+      if (Array.isArray(data)) {
+
+        return (serializePosts(data, 'comments'));
+
+      } else {
+
+        getAllCommentsForPost(data.id, (comments) => {
+          return (serializePost(data, comments));
+        });
+
+      }
+
+    })
+    .then((data) => {
+
+      res.status(200)
+        .json({
+          status: 'success',
+          data,
+          message: 'Retrieved posts with comments'
+        });
+
+    })
+    .catch(function (err) {
+
+      return next(err);
+
+    });
+
+}
+
 function getAllPosts(req, res, next) {
 
-  let request = 'SELECT posts.id, posts.content, posts.author_id, posts.created, posts.updated, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id';
+  let request = 'SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
+    'users.login, users.firstname, users.lastname ' +
+    'FROM posts INNER JOIN users ON posts.author_id = users.id';
 
   if (req.query.author_id) {
 
@@ -149,13 +226,23 @@ function getAllPosts(req, res, next) {
 
 }
 
-function serializePosts(data) {
+async function serializePosts(data, comments = null) {
 
   let newData = [];
 
   for (let i = 0, len = data.length; i < len; i++) {
 
-    newData.push(serializePost(data[i]));
+    if (comments && data[i].comments_nb > 0) {
+
+      let comments = await getAllCommentsForPost(data[i].id);
+
+      newData.push(serializePost(data[i], comments));
+
+    } else {
+
+      newData.push(serializePost(data[i]));
+
+    }
 
   }
 
@@ -163,7 +250,7 @@ function serializePosts(data) {
 
 }
 
-function serializePost(data) {
+function serializePost(data, comments = null) {
 
   return ({
     id: data.id,
@@ -172,6 +259,7 @@ function serializePost(data) {
     comments_nb: data.comments_nb,
     created: data.created,
     updated: data.updated,
+    comments,
     user: {
       id: data.author_id,
       login: data.login,
@@ -196,7 +284,12 @@ function getSinglePost(req, res, next) {
 
   const post_id = parseInt(req.params.id);
 
-  db.one('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id WHERE posts.id = $1 ORDER BY posts.id DESC, posts.created DESC', post_id)
+  db.one('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
+    'users.login, users.firstname, users.lastname ' +
+    'FROM posts INNER JOIN users ON posts.author_id = users.id ' +
+    'WHERE posts.id = $1 ' +
+    'ORDER BY posts.id DESC, posts.created DESC',
+    post_id)
 
     .then((data) => serializePost(data))
     .then((data) => {
@@ -277,6 +370,7 @@ module.exports = {
   deletePost,
   findPostById,
   getAllPosts,
+  getAllPostsWithComments,
   getSinglePost,
   updatePost
 };

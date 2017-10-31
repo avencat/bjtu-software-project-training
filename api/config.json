@@ -1,6 +1,0 @@
-{
-  "database" : {
-    "test": "postgres://avencat:root@localhost:5432/socialnetworktest",
-    "dev": "postgres://avencat:root@localhost:5432/socialnetwork"
-  }
-}

@@ -53,7 +53,7 @@ function deleteLike(req, res, next) {
 
       next(err);
 
-    } else if (!req.user || like.user_id !== req.user.id) {
+    } else if (!req.user || parseInt(like.user_id) !== req.user.id) {
 
       res.status(403)
         .json({

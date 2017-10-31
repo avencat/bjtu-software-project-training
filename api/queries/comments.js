@@ -61,7 +61,7 @@ function deleteComment(req, res, next) {
 
       next(err);
 
-    } else if (!req.user || comment.author_id !== req.user.id) {
+    } else if (!req.user || parseInt(comment.author_id) !== req.user.id) {
 
       res.status(403)
         .json({
@@ -124,7 +124,7 @@ function updateComment(req, res, next) {
 
       next(err);
 
-    } else if (!req.user || comment.author_id !== req.user.id) {
+    } else if (!req.user || parseInt(comment.author_id) !== req.user.id) {
 
       res.status(403)
         .json({

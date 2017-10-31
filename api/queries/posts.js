@@ -52,7 +52,7 @@ function deletePost(req, res, next) {
 
       next(err);
 
-    } else if (!req.user || post.author_id !== req.user.id) {
+    } else if (!req.user || parseInt(post.author_id) !== req.user.id) {
 
       res.status(403)
         .json({
@@ -62,7 +62,7 @@ function deletePost(req, res, next) {
 
     } else {
 
-      db.result('DELETE FROM likes WHERE id = $1', post_id)
+      db.result('DELETE FROM posts WHERE id = $1', post_id)
         .then(function (result) {
 
           /* jshint ignore:start */
@@ -107,7 +107,56 @@ function findPostById(id, cb) {
 
 function getAllPosts(req, res, next) {
 
-  res.status(500).json({status: "error", message: "Not implemented yet"});
+  let request = 'SELECT posts.id, posts.content, posts.author_id, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id';
+
+  if (req.query.user_id) {
+
+    request += ' WHERE posts.author_id = $1';
+
+  }
+
+  const user_id = parseInt(req.query.user_id);
+
+  db.any(request, user_id)
+
+    .then((data) => {
+
+      if (Array.isArray(data)) {
+        return (serializePosts(data));
+      } else {
+        return (serializePost(data));
+      }
+
+    })
+    .then((data) => {
+
+      res.status(200)
+        .json({
+          status: 'success',
+          data,
+          message: 'Retrieved posts'
+        });
+
+    })
+    .catch(function (err) {
+
+      return next(err);
+
+    });
+
+}
+
+function serializePosts(data) {
+
+  let newData = [];
+
+  for (let i = 0, len = data.length; i < len; i++) {
+
+    newData.push(serializePost(data[i]));
+
+  }
+
+  return (newData);
 
 }
 
@@ -175,7 +224,7 @@ function updatePost(req, res, next) {
 
       next(err);
 
-    } else if (!req.user || post.author_id !== req.user.id) {
+    } else if (!req.user || parseInt(post.author_id) !== req.user.id) {
 
       res.status(403)
         .json({

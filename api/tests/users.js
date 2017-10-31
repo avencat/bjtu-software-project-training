@@ -15,7 +15,7 @@ function cleandb() {
 describe('Testing users methods', function () {
 
   let server;
-  let token = 1;
+  let token, user_id;
 
   before(cleandb);
 
@@ -35,7 +35,7 @@ describe('Testing users methods', function () {
 
   it('Register a new user', (done) => {
     request(server)
-      .post('/api/register')
+      .post('/register')
       .send({
         'login': 'userTest',
         'email': 'user@test.org',
@@ -47,7 +47,7 @@ describe('Testing users methods', function () {
 
   it('Register a new user no email', (done) => {
     request(server)
-      .post('/api/register')
+      .post('/register')
       .send({
         'login': 'userTest1',
         'password': 'fooBar'
@@ -58,7 +58,7 @@ describe('Testing users methods', function () {
 
   it('Register a new user no login', (done) => {
     request(server)
-      .post('/api/register')
+      .post('/register')
       .send({
         'email': 'user@test.org',
         'password': 'fooBar'
@@ -69,7 +69,7 @@ describe('Testing users methods', function () {
 
   it('Register a new user short password', (done) => {
     request(server)
-      .post('/api/register')
+      .post('/register')
       .send({
         'login': 'userTest2',
         'email': 'user2@test.org',
@@ -81,7 +81,7 @@ describe('Testing users methods', function () {
 
   it('Register a new user duplicated login', (done) => {
     request(server)
-      .post('/api/register')
+      .post('/register')
       .send({
         'login': 'userTest',
         'email': 'user2@test.org',
@@ -93,7 +93,7 @@ describe('Testing users methods', function () {
 
   it('Register a new user duplicated email', (done) => {
     request(server)
-      .post('/api/register')
+      .post('/register')
       .send({
         'login': 'user1Test',
         'email': 'user@test.org',
@@ -105,7 +105,7 @@ describe('Testing users methods', function () {
 
   it('Login with good informations', (done) => {
     request(server)
-      .post('/api/login')
+      .post('/login')
       .send({
         'login': 'userTest',
         'password': 'fooBar'
@@ -114,6 +114,7 @@ describe('Testing users methods', function () {
       .expect(200, (err, res) => {
         if (res && res.body && res.body.token) {
           token = res.body.token;
+          user_id = res.body.user_id;
         }
         done();
       });
@@ -121,7 +122,7 @@ describe('Testing users methods', function () {
 
   it('Login with bad informations', (done) => {
     request(server)
-      .post('/api/login')
+      .post('/login')
       .send({
         'login': 'userTest',
         'password': 'fooBartol'
@@ -130,14 +131,24 @@ describe('Testing users methods', function () {
       .expect(401, done);
   });
 
-  it('Update user', (done) => {
+  it('Update user good informations', (done) => {
     request(server)
-      .put('/api/user')
+      .put('/users/' + user_id)
       .set('Authorization', 'Bearer ' + token)
       .send({
         'login': 'userTest2',
       })
       .expect(200, done);
+  });
+
+  it('Update user bad login', (done) => {
+    request(server)
+      .put('/users/' + user_id)
+      .set('Authorization', 'Bearer ' + token)
+      .send({
+        'login': 'user',
+      })
+      .expect(400, done);
   });
 
 });

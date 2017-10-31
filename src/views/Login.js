@@ -29,7 +29,7 @@ class Login extends Component {
     const { login, password } = this.state;
 
 
-      fetch("http://localhost:3001/api/login", {
+      fetch("http://localhost:3001/login", {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -43,6 +43,7 @@ class Login extends Component {
       return data.json()
     }).then((data) => {
       sessionStorage.setItem("userToken", data.token);
+      sessionStorage.setItem("userId", data.user_id);
       console.log(data);
       if (data.status === "success") {
         this.props.router.push('/Profile');

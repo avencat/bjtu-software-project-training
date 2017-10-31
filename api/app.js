@@ -10,7 +10,7 @@ let passport = require('passport');
 let LocalStrategy = require('passport-local').Strategy;
 let DigestStrategy = require('passport-http').DigestStrategy;
 let BasicStrategy = require('passport-http').BasicStrategy;
-let db = require('./queries');
+let dbUsers = require('./queries/users');
 let bcrypt = require('bcryptjs');
 
 // JWT
@@ -26,7 +26,7 @@ jwtOptions.secretOrKey = '25015c61-030e-452f-a92f-5b8cdb0b627e';
 passport.use(new JwtStrategy(jwtOptions, function(jwt_payload, next) {
 
   // usually this would be a database call:
-  db.findUserById(jwt_payload.id, (err, user) => {
+  dbUsers.findUserById(jwt_payload.id, (err, user) => {
 
     if (err) {
 
@@ -53,7 +53,7 @@ passport.use(new BasicStrategy(
 
   function(username, password, done) {
 
-    db.findUserByLogin(username, function(err, user) {
+    dbUsers.findUserByLogin(username, function(err, user) {
 
       if (err) {
         return done(err);
@@ -82,7 +82,7 @@ passport.use(new DigestStrategy(
 
   function(username, done) {
 
-    db.findUserByLogin(username, function(err, user) {
+    dbUsers.findUserByLogin(username, function(err, user) {
 
       if (err) {
         return done(err);
@@ -111,7 +111,7 @@ passport.use(new LocalStrategy(
 
   function(username, password, done) {
 
-    db.findUserByLogin(username, function(err, user) {
+    dbUsers.findUserByLogin(username, function(err, user) {
 
       if (err) {
         return done(err);
@@ -136,7 +136,7 @@ passport.serializeUser(function(user, cb) {
 });
 
 passport.deserializeUser(function(id, cb) {
-  db.findUserById(id, function (err, user) {
+  dbUsers.findUserById(id, function (err, user) {
     if (err) { return cb(err); }
     cb(null, user);
   });
@@ -178,9 +178,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let index = require('./routes/index');
 let users = require('./routes/users');
+let posts = require('./routes/posts');
 
 app.use('/', index);
 app.use('/users', users);
+app.use('/posts', posts);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

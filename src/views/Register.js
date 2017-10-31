@@ -38,7 +38,7 @@ class Register extends Component {
 
     if (confirmedPassword === password) {
 
-      fetch("http://localhost:3001/api/register", {
+      fetch("http://localhost:3001/register", {
 
         method: 'POST',
 

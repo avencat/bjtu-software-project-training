@@ -22,7 +22,7 @@ export default class Profile extends Component {
   }
 
   componentDidMount() {
-    fetch("http://localhost:3001/api/user", {
+    fetch("http://localhost:3001/users" + sessionStorage.getItem("userId"), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -56,7 +56,7 @@ export default class Profile extends Component {
 
     if (confirmedPassword === password) {
 
-      fetch("http://localhost:3001/api/user", {
+      fetch("http://localhost:3001/users/" + sessionStorage.getItem("userId"), {
 
         method: 'PUT',
 

@@ -181,12 +181,16 @@ let users = require('./routes/users');
 let posts = require('./routes/posts');
 let comments = require('./routes/comments');
 let friendships = require('./routes/friendships');
+let likes = require('./routes/likes');
+let likeComments = require('./routes/likeComments');
 
 app.use('/', index);
 app.use('/users', users);
 app.use('/posts', posts);
 app.use('/comments', comments);
 app.use('/friendships', friendships);
+app.use('/likes', likes);
+app.use('/likeComments', likeComments);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

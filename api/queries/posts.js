@@ -109,13 +109,13 @@ function getAllPosts(req, res, next) {
 
   let request = 'SELECT posts.id, posts.content, posts.author_id, users.login, users.firstname, users.lastname FROM posts INNER JOIN users ON posts.author_id = users.id';
 
-  if (req.query.user_id) {
+  if (req.query.author_id) {
 
     request += ' WHERE posts.author_id = $1';
 
   }
 
-  const user_id = parseInt(req.query.user_id);
+  const user_id = parseInt(req.query.author_id);
 
   db.any(request, user_id)
 

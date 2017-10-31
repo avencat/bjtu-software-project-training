@@ -9,6 +9,7 @@ function createUser(req, res, next) {
 
   const mail = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
   const login = /^[a-z0-9_]{5,}$/;
+  const now = new Date();
 
   body = {
     firstname: req.body.firstname ? req.body.firstname : null,
@@ -18,7 +19,8 @@ function createUser(req, res, next) {
     login: req.body.login ? req.body.login.trim().toLowerCase() : null,
     gender: req.body.gender ? req.body.gender : null,
     telephone: req.body.telephone ? req.body.telephone : null,
-    password: req.body.password ? req.body.password : null
+    password: req.body.password ? req.body.password : null,
+    created: now
   };
 
   if (!body.password || body.password.length < 6) {
@@ -49,23 +51,29 @@ function createUser(req, res, next) {
 
     body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password)' +
-      'values(${firstname}, ${lastname}, ${birthday}, ${email}, ${login}, ${gender}, ${telephone}, ${password})',
+    db.none('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated)' +
+      'values(${firstname}, ${lastname}, ${birthday}, ${email}, ${login}, ${gender}, ${telephone}, ${password}, ${created}, ${created})',
       body)
       .then(() => {
         res.status(201)
           .json({
+
             status: 'success',
             message: 'Inserted one user'
+
           });
       })
       .catch(function (err) {
         if (err.constraint === "users_email_key") {
+
           err.status = 400;
           err.message = "Email taken."
+
         } else if (err.constraint === "users_login_key") {
+
           err.status = 400;
           err.message = "Login taken."
+
         }
         return next(err);
       });
@@ -237,6 +245,7 @@ function login(req, res, next) {
 function updateUser(req, res, next) {
 
   const login = /^[a-z0-9_]{5,}$/;
+  const now = new Date();
 
   body = {
     firstname: req.body.firstname ? req.body.firstname : null,
@@ -269,8 +278,8 @@ function updateUser(req, res, next) {
     if (body.password)
       body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none('UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), gender=COALESCE($5, gender), telephone=COALESCE($6, telephone), password=COALESCE($7, password) WHERE id = $8',
-      [body.firstname, body.lastname, body.birthday, body.login, body.gender, body.telephone, body.password, req.user.id])
+    db.none('UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), gender=COALESCE($5, gender), telephone=COALESCE($6, telephone), password=COALESCE($7, password), updated=$8 WHERE id = $9',
+      [body.firstname, body.lastname, body.birthday, body.login, body.gender, body.telephone, body.password, now, req.user.id])
       .then(() => {
         res.status(200)
           .json({

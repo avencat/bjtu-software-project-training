@@ -3,10 +3,13 @@ let { db } = require('../database');
 
 function createComment(req, res, next) {
 
+  const now = new Date();
+
   body = {
     content: req.body.content ? req.body.content : null,
     post_id: req.body.post_id,
-    author_id: req.user.id
+    author_id: req.user.id,
+    created: now
   };
 
   if (!body.content) {
@@ -27,8 +30,8 @@ function createComment(req, res, next) {
 
   } else {
 
-    db.none('INSERT into comments(author_id, post_id, content, likes_nb)' +
-      'values(${author_id}, ${post_id}, ${content}, 0)',
+    db.none('INSERT into comments(author_id, post_id, content, likes_nb, created, updated)' +
+      'values(${author_id}, ${post_id}, ${content}, 0, ${created}, ${created})',
       body)
       .then(() => {
 
@@ -194,6 +197,7 @@ function serializeComment(data) {
 function updateComment(req, res, next) {
 
   const comment_id = parseInt(req.params.id);
+  const now = new Date();
 
   body = {
     content: req.body.content ? req.body.content : null
@@ -223,8 +227,8 @@ function updateComment(req, res, next) {
 
     } else {
 
-      db.none('UPDATE comments SET content=COALESCE($1, content) WHERE id=$2',
-        [body.content, comment_id])
+      db.none('UPDATE comments SET content=COALESCE($1, content), updated=$2 WHERE id=$3',
+        [body.content, now, comment_id])
         .then(() => {
 
           res.status(200)

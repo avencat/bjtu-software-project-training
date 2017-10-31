@@ -212,9 +212,9 @@ BEGIN
 
   -- Fill the time fields
   IF (TG_OP = 'INSERT') THEN
-    NEW.created := current_timestamp;
+    OLD.created := current_timestamp;
   END IF;
-  NEW.updated := current_timestamp;
+  OLD.updated := current_timestamp;
 
   RETURN NEW;
 

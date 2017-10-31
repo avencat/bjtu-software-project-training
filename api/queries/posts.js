@@ -3,9 +3,12 @@ let { db } = require('../database');
 
 function createPost(req, res, next) {
 
+  const now = new Date();
+
   body = {
     content: req.body.content ? req.body.content : null,
-    author_id: req.user.id
+    author_id: req.user.id,
+    created: now
   };
 
   if (!body.content) {
@@ -18,8 +21,8 @@ function createPost(req, res, next) {
 
   } else {
 
-    db.none('INSERT into posts(author_id, content, comments_nb, likes_nb)' +
-      'values(${author_id}, ${content}, 0, 0)',
+    db.none('INSERT into posts(author_id, content, comments_nb, likes_nb, created, updated)' +
+      'values(${author_id}, ${content}, 0, 0, ${created}, ${created})',
       body)
       .then(() => {
 
@@ -215,10 +218,7 @@ function getSinglePost(req, res, next) {
 function updatePost(req, res, next) {
 
   const post_id = parseInt(req.params.id);
-
-  body = {
-    content: req.body.content ? req.body.content : null
-  };
+  const now = new Date();
 
   findPostById(post_id, (err, post) => {
 
@@ -244,8 +244,8 @@ function updatePost(req, res, next) {
 
     } else {
 
-      db.none('UPDATE posts SET content=COALESCE($1, content) WHERE id=$2',
-        [body.content, post_id])
+      db.none('UPDATE posts SET content=COALESCE($1, content), updated=$2 WHERE id=$3',
+        [req.body.content ? req.body.content : null, now, post_id])
         .then(() => {
 
           res.status(200)

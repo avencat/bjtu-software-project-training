@@ -3,9 +3,12 @@ let { db } = require('../database');
 
 function createLikeComment(req, res, next) {
 
+  const now = new Date();
+
   body = {
     comment_id: req.body.comment_id,
-    user_id: req.user.id
+    user_id: req.user.id,
+    created: now
   };
 
 
@@ -19,8 +22,8 @@ function createLikeComment(req, res, next) {
 
   } else {
 
-    db.none('INSERT into comment_likes(user_id, comment_id)' +
-      'values(${user_id}, ${comment_id})',
+    db.none('INSERT into comment_likes(user_id, comment_id, created, updated)' +
+      'values(${user_id}, ${comment_id}, ${created}, ${created})',
       body)
       .then(() => {
 

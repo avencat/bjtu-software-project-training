@@ -22,7 +22,7 @@ export default class Profile extends Component {
   }
 
   componentDidMount() {
-    fetch("http://localhost:3001/users" + sessionStorage.getItem("userId"), {
+    fetch("http://localhost:3001/users/" + sessionStorage.getItem("userId"), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

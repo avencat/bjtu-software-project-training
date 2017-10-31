@@ -167,3 +167,6 @@ Temporary Items
 
 .idea/
 package-lock.json
+
+api/config.json
+api/doc

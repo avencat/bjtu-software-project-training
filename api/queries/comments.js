@@ -108,7 +108,87 @@ function findCommentById(id, cb) {
 
 }
 
-function getComments(req, res, next) {}
+function getComments(req, res, next) {
+
+  if (req.query.post_id) {
+
+    const user_id = parseInt(req.query.post_id);
+
+    db.any('SELECT comments.id, comments.content, comments.author_id, comments.post_id, users.login, users.firstname, users.lastname FROM comments INNER JOIN users ON comments.author_id = users.id WHERE posts.post_id = $1', user_id)
+
+      .then((data) => {
+
+        if (Array.isArray(data)) {
+
+          return (serializeComments(data));
+
+        } else {
+
+          return (serializeComment(data));
+
+        }
+
+      })
+      .then((data) => {
+
+        res.status(200)
+          .json({
+
+            status: 'success',
+            data,
+            message: 'Retrieved posts'
+
+          });
+
+      })
+      .catch(function (err) {
+
+        return next(err);
+
+      });
+
+  } else {
+
+    res.status(400)
+      .json({
+
+        status: 'error',
+        message: 'post_id not provided.'
+
+      });
+
+  }
+}
+
+function serializeComments(data) {
+
+  let newData = [];
+
+  for (let i = 0, len = data.length; i < len; i++) {
+
+    newData.push(serializeComment(data[i]));
+
+  }
+
+  return (newData);
+
+}
+
+function serializeComment(data) {
+
+  return ({
+    id: data.id,
+    content: data.content,
+    post_id: data.post_id,
+    user: {
+      id: data.author_id,
+      login: data.login,
+      firstname: data.firstname,
+      lastname: data.lastname
+    }
+  });
+
+}
 
 function updateComment(req, res, next) {
 

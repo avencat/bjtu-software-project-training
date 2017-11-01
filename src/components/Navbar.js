@@ -53,20 +53,35 @@ export default class Nav extends Component {
     // TODO call server function to delete the token on the server too
   }
   render() {
+
+
+    var styleNavBar = {
+      backgroundColor: "#3798ce"
+    }
+
+    var styleNavBarText = {
+      color: "#ffffff"
+    }
+
     return (
-      <nav className="navbar navbar-default">
-        {/*
+
+
+      <nav className="navbar navbar-default" style={styleNavBar}>
+        {
               <div className="navbar-header">
-                <Link className="navbar-brand" to="/">Home</Link>
-              </div>
+                <Link className="navbar-brand" to="/">
+                  <p style={styleNavBarText}>Home</p>
+                </Link>
               <ul className="nav navbar-nav">
                 <li>
-                  <Link to="/">Profile</Link>
+                  <Link to="/profile">
+                    <p style={styleNavBarText}>Profile</p>
+                  </Link>
                 </li>
-                <li>
-                  <Link to="/Register">Register</Link>
-                </li>
-              </ul>*/}
+              </ul>
+              </div>
+
+          }
         <ul className="nav navbar-nav navbar-right">
           {this.MyButton}
         </ul>

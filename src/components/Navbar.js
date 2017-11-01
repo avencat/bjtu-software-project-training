@@ -7,6 +7,8 @@ export default class Nav extends Component {
   constructor(props) {
     super(props);
 
+    this.user = sessionStorage.getItem("userToken");
+
     this.onLogout = this.onLogout.bind(this);
   }
 
@@ -49,42 +51,54 @@ export default class Nav extends Component {
   }
 
   onLogout() {
-    sessionStorage.removeItem("userToken")
+    sessionStorage.removeItem("userToken");
+    sessionStorage.removeItem("userId");
     // TODO call server function to delete the token on the server too
   }
   render() {
 
 
-    var styleNavBar = {
+    let styleNavBar = {
       backgroundColor: "#3798ce"
-    }
+    };
 
-    var styleNavBarText = {
+    let styleNavBarText = {
       color: "#ffffff"
-    }
+    };
 
     return (
 
-
       <nav className="navbar navbar-default" style={styleNavBar}>
-        {
-              <div className="navbar-header">
-                <Link className="navbar-brand" to="/">
-                  <p style={styleNavBarText}>Home</p>
-                </Link>
+        <div className="navbar-header">
+
+          <Link className="navbar-brand" to="/">
+            <p style={styleNavBarText}>Home</p>
+          </Link>
+
+          {
+            this.user ?
+
               <ul className="nav navbar-nav">
+
                 <li>
                   <Link to="/profile">
                     <p style={styleNavBarText}>Profile</p>
                   </Link>
                 </li>
+
               </ul>
-              </div>
+
+            :
+
+              <div/>
 
           }
+        </div>
+
         <ul className="nav navbar-nav navbar-right">
           {this.MyButton}
         </ul>
+
       </nav>
     );
   }

@@ -62,7 +62,7 @@ class Register extends Component {
 
           if (data.status === "success") {
 
-            this.props.router.push('/login');
+            this.props.router.replace({ pathname: '/login', state: { flashStatus: "success", flashMessage: "You successfully registered, you can now login!" } });
 
           }
 

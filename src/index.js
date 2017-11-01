@@ -17,7 +17,7 @@ const Root = () => {
             </Router>
         </div>
     )
-}
+};
 
 ReactDOM.render(<Root />, document.getElementById('root'));
 /*

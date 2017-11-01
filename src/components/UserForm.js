@@ -4,10 +4,6 @@ import PropTypes from 'prop-types';
 
 export default class UserForm extends Component {
 
-  constructor(props) {
-    super(props);
-  }
-
   render() {
     return (
       <form className="form-horizontal" onSubmit={this.props.onSubmit}>

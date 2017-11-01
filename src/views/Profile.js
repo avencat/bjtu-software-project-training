@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import UserForm from '../components/UserForm';
+import Alert from '../components/Alert';
 import 'whatwg-fetch';
 
 export default class Profile extends Component {
@@ -14,11 +15,15 @@ export default class Profile extends Component {
       firstname: '',
       lastname: '',
       password: '',
-      confirmedPassword: ''
+      confirmedPassword: '',
+      flashStatus: '',
+      flashMessage: '',
+      showFlashMessage: false
     };
 
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.handleHideFlashMessage = this.handleHideFlashMessage.bind(this);
   }
 
   componentDidMount() {
@@ -82,7 +87,13 @@ export default class Profile extends Component {
 
         if (data.status === "success") {
 
-          this.props.router.push('/profile');
+          this.setState({
+
+            flashStatus: 'success',
+            flashMessage: 'User successfully updated',
+            showFlashMessage: true
+
+          });
 
         }
 
@@ -94,14 +105,26 @@ export default class Profile extends Component {
     }
   }
 
+  handleHideFlashMessage() {
+
+    this.setState({
+
+      flashStatus: '',
+      flashMessage: '',
+      showFlashMessage: false
+
+    });
+
+  }
+
 
 
   render() {
 
-    const { login, firstname, lastname, email, password, confirmedPassword } = this.state;
+    const { login, firstname, lastname, email, password, confirmedPassword, showFlashMessage, flashStatus, flashMessage } = this.state;
 
     return (
-      <div>
+      <div style={{position: 'relative'}}>
 
         <Nav location={this.props.location}/>
 
@@ -127,7 +150,17 @@ export default class Profile extends Component {
 
 
           </div>
+
         </div>
+
+        <Alert
+          visible={showFlashMessage}
+          message={flashMessage}
+          status={flashStatus}
+          dismissTimer={6000}
+          onDismiss={this.handleHideFlashMessage}
+        />
+
       </div>
     );
   }

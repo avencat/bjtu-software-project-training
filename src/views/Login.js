@@ -1,18 +1,34 @@
 import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import 'whatwg-fetch';
+import Alert from '../components/Alert';
 
 class Login extends Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+
     this.state = {
       login: '',
-      password: ''
+      password: '',
+      alertVisible: true
     };
+
+    this.flashStatus = null;
+    this.flashMessage = null;
+
+    console.log(props);
+
+    if (props.location.state) {
+
+      this.flashStatus = props.location.state.flashStatus;
+      this.flashMessage = props.location.state.flashMessage;
+
+    }
 
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.handleAlertDismiss = this.handleAlertDismiss.bind(this);
   }
 
   onChange(e) {
@@ -29,7 +45,7 @@ class Login extends Component {
     const { login, password } = this.state;
 
 
-      fetch("http://localhost:3001/login", {
+    fetch("http://localhost:3001/login", {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -44,9 +60,9 @@ class Login extends Component {
     }).then((data) => {
       sessionStorage.setItem("userToken", data.token);
       sessionStorage.setItem("userId", data.user_id);
-      console.log(data);
+
       if (data.status === "success") {
-        this.props.router.push('/Profile');
+        this.props.router.replace({ pathname: '/', state: { flashStatus: "success", flashMessage: "Welcome!" } });
       }
     }).catch((err) => {
       console.log(err)
@@ -54,10 +70,16 @@ class Login extends Component {
 
   }
 
+  handleAlertDismiss() {
+    this.setState({
+      alertVisible: false
+    });
+  }
+
   render() {
     const { login, password} = this.state;
     return (
-      <div>
+      <div style={{position: 'relative'}}>
 
         <Nav location={this.props.location}/>
 
@@ -100,7 +122,25 @@ class Login extends Component {
             </form>
 
           </div>
+
         </div>
+
+        {
+          this.flashMessage && this.flashStatus ?
+
+            <Alert
+              visible={this.state.alertVisible}
+              message={this.flashMessage}
+              status={this.flashStatus}
+              dismissTimer={6000}
+              onDismiss={this.handleAlertDismiss}
+            />
+
+          :
+
+            <div/>
+        }
+
       </div>
     );
   }

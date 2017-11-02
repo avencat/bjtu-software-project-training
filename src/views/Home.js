@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import Alert from '../components/Alert';
 import PostModal from '../components/PostModal';
+import CommentModal from '../components/CommentModal';
 
 
 class Profile extends Component {
@@ -84,8 +85,16 @@ class Profile extends Component {
 
                     onModify={this.fetchPosts}
                   />
-                  <b className="col-lg-11" style={stylePostLogin}>{(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}</b>
+                  <b className="col-lg-10" style={stylePostLogin}>{(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}</b>
                   <button className="btn btn-outline-danger" type="button" data-toggle="modal" data-target={"#myModal" + onePost.id}><i className="material-icons">mode_edit</i></button>
+                  <CommentModal
+                    id={onePost.id}
+                    post={onePost.content}
+                    login={(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}
+
+                    onModify={this.fetchPosts}
+                  />
+                  <button className="btn btn-outline-danger" type="button" data-toggle="modal" data-target={"#myCommentModal" + onePost.id}><i className="material-icons">comment</i></button>
                 </div>
                 <p style={stylePostContent}>{onePost.content}</p>
               </div>

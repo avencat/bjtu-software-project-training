@@ -7,6 +7,7 @@ function cleandb() {
   if (process.env.NODE_ENV === 'test') {
 
     db.none('DELETE FROM users');
+    db.none('ALTER SEQUENCE users_id_seq RESTART WITH 1');
 
   }
 

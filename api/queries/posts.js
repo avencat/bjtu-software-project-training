@@ -22,15 +22,17 @@ function createPost(req, res, next) {
 
   } else {
 
-    db.none('INSERT into posts(author_id, content, comments_nb, likes_nb, created, updated)' +
-      'values(${author_id}, ${content}, 0, 0, ${created}, ${created})',
+    db.oneOrNone('INSERT INTO posts(author_id, content, comments_nb, likes_nb, created, updated) ' +
+      'VALUES(${author_id}, ${content}, 0, 0, ${created}, ${created}) ' +
+      'RETURNING posts.id AS post_id',
       body)
-      .then(() => {
+      .then((response) => {
 
         res.status(201)
           .json({
 
             status: 'success',
+            post_id: response.post_id,
             message: 'Inserted one post for user ' + body.author_id
 
           });
@@ -140,13 +142,13 @@ function getAllPostsWithComments(req, res, next) {
     'users.login, users.firstname, users.lastname ' +
     'FROM posts INNER JOIN users ON posts.author_id = users.id';
 
-  if (req.query.author_id) {
+  if (req.query.author_id || req.query.user_id) {
 
     request += ' WHERE posts.author_id = $1';
 
   }
 
-  const user_id = parseInt(req.query.author_id);
+  const user_id = parseInt(req.query.author_id || req.query.user_id);
 
   db.any(request + ' ORDER BY posts.id DESC, posts.created DESC', user_id)
 
@@ -189,13 +191,13 @@ function getAllPosts(req, res, next) {
     'users.login, users.firstname, users.lastname ' +
     'FROM posts INNER JOIN users ON posts.author_id = users.id';
 
-  if (req.query.author_id) {
+  if (req.query.author_id || req.query.user_id) {
 
     request += ' WHERE posts.author_id = $1';
 
   }
 
-  const user_id = parseInt(req.query.author_id);
+  const user_id = parseInt(req.query.author_id || req.query.user_id);
 
   db.any(request + ' ORDER BY posts.id DESC, posts.created DESC', user_id)
 
@@ -326,10 +328,10 @@ function updatePost(req, res, next) {
       res.status(403)
         .json({
           status: 'error',
-          message: 'You are not authorized to delete this comment.'
+          message: 'You are not authorized to update this comment.'
         });
 
-    } else if (!body.content) {
+    } else if (!req.body.content) {
 
       res.status(400)
         .json({

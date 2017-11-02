@@ -23,8 +23,6 @@ export default class PostModal extends Component {
 
   onModify(e) {
 
-    console.log("onModify");
-
     e.preventDefault();
 
     fetch("http://localhost:3001/posts/" + this.props.id, {
@@ -57,6 +55,37 @@ export default class PostModal extends Component {
     });
   }
 
+  onDelete(e){
+
+    e.preventDefault();
+
+    fetch("http://localhost:3001/posts/" + this.props.id, {
+
+      method: 'DELETE',
+
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+      }
+
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+
+      console.log(data);
+
+      if (data.status === "success") {
+
+        window.location.reload();
+
+      }
+    }).catch((err) => {
+      console.log(err)
+    });
+
+  }
+
 
   render() {
     return (
@@ -75,6 +104,7 @@ export default class PostModal extends Component {
               <div className="modal-footer">
                 <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
                 <button className="btn btn-primary" type="submit" value="Submit">Save changes</button>
+                <button className="btn btn-outline-danger" type="button"><i className="material-icons" onClick={this.onDelete.bind(this)}>delete</i></button>
               </div>
             </form>
           </div>

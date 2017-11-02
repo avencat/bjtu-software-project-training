@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import Alert from '../components/Alert';
+import PostModal from '../components/PostModal';
+
 
 class Profile extends Component {
 
@@ -10,6 +12,7 @@ class Profile extends Component {
     this.state = {
       post: '',
       posts: [],
+      putPost: '',
       listPosts: [],
       user: sessionStorage.getItem("userId"),
       flashStatus: '',
@@ -20,6 +23,7 @@ class Profile extends Component {
 
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.fetchPosts = this.fetchPosts.bind(this);
     this.handleHideFlashMessage = this.handleHideFlashMessage.bind(this);
   }
 
@@ -38,6 +42,12 @@ class Profile extends Component {
 
 
   componentDidMount() {
+
+    this.fetchPosts();
+
+  }
+
+  fetchPosts() {
 
     let stylePostLogin = {
       fontSize: 20
@@ -67,7 +77,16 @@ class Profile extends Component {
           const listPosts = data.data.map((onePost) =>
             <li key={onePost.id} className="list-group-item">
               <div>
-                <b style={stylePostLogin}>{(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}</b>
+                <div className="row">
+                  <PostModal
+                    id={onePost.id}
+                    post={onePost.content}
+
+                    onModify={this.fetchPosts}
+                  />
+                  <b className="col-lg-11" style={stylePostLogin}>{(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}</b>
+                  <button className="btn btn-outline-danger" type="button" data-toggle="modal" data-target={"#myModal" + onePost.id}><i className="material-icons">mode_edit</i></button>
+                </div>
                 <p style={stylePostContent}>{onePost.content}</p>
               </div>
             </li>

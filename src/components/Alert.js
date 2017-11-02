@@ -28,7 +28,7 @@ export default class Alert extends Component {
 
       <div
         className={'alert alert-dismissible fade show alert-' + this.props.status + ' ' + (this.props.visible ? 'in' : 'out')}
-        style={this.props.visible ? styles.alert : styles.alertHidden}
+        style={styles.alert}
       >
         <button type="button" className="close" aria-label="Close" onClick={this.resetTimer}>
             <span aria-hidden="true">&times;</span>
@@ -49,12 +49,6 @@ const styles = {
     position: 'absolute',
     width: "100%",
     top: 25
-
-  },
-
-  alertHidden: {
-
-    zIndex: -1
 
   }
 

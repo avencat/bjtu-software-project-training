@@ -51,11 +51,22 @@ class Profile extends Component {
   fetchPosts() {
 
     let stylePostLogin = {
+
       fontSize: 20
+
     };
 
     let stylePostContent = {
-      fontSize: 14
+
+      fontSize: 21,
+      marginTop: 10,
+      WebkitHyphens: 'auto',
+      MozHyphens: 'auto',
+      msHyphens: 'auto',
+      OHyphens: 'auto',
+      hyphens: 'auto',
+      wordWrap: 'break-word'
+
     };
 
     if (this.state.user) {
@@ -76,7 +87,7 @@ class Profile extends Component {
         if (data.status === "success") {
 
           const listPosts = data.data.map((onePost) =>
-            <li key={onePost.id} className="list-group-item">
+            <li key={onePost.id} className="list-group-item" style={styles.postContainer}>
               <div>
                 <div className="row">
                   <PostModal
@@ -86,7 +97,6 @@ class Profile extends Component {
                     onModify={this.fetchPosts}
                   />
                   <b className="col-lg-10" style={stylePostLogin}>{(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}</b>
-                  <button className="btn btn-outline-danger" type="button" data-toggle="modal" data-target={"#myModal" + onePost.id}><i className="material-icons">mode_edit</i></button>
                   <CommentModal
                     id={onePost.id}
                     post={onePost.content}
@@ -94,7 +104,14 @@ class Profile extends Component {
 
                     onModify={this.fetchPosts}
                   />
-                  <button className="btn btn-outline-danger" type="button" data-toggle="modal" data-target={"#myCommentModal" + onePost.id}><i className="material-icons">comment</i></button>
+                  <span style={styles.actionButtons}>
+                    <button className="btn btn-primary" type="button" data-toggle="modal" data-target={"#myCommentModal" + onePost.id} style={styles.actionButton}>
+                      <i className="material-icons">comment</i>
+                    </button>
+                    <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + onePost.id}>
+                      <i className="material-icons">mode_edit</i>
+                    </button>
+                  </span>
                 </div>
                 <p style={stylePostContent}>{onePost.content}</p>
               </div>
@@ -187,6 +204,14 @@ class Profile extends Component {
     return (
       <div style={{position: 'relative'}}>
 
+        <Alert
+          visible={showFlashMessage}
+          message={flashMessage}
+          status={flashStatus}
+          dismissTimer={flashTimer}
+          onDismiss={this.handleHideFlashMessage}
+        />
+
         <Nav location={this.props.location}/>
 
         <div className="col-sm-12">
@@ -207,7 +232,7 @@ class Profile extends Component {
                     </div>
 
                     <div className="col-lg-1">
-                      <input className="btn btn-lg btn-success" type="submit" value="Submit"/>
+                      <input className="btn btn-lg btn-primary" type="submit" value="Submit"/>
                     </div>
 
                   </div>
@@ -230,17 +255,34 @@ class Profile extends Component {
 
         </div>
 
-        <Alert
-          visible={showFlashMessage}
-          message={flashMessage}
-          status={flashStatus}
-          dismissTimer={flashTimer}
-          onDismiss={this.handleHideFlashMessage}
-        />
-
       </div>
     );
   }
 }
+
+
+const styles = {
+
+  actionButton: {
+
+    marginRight: 10
+
+  },
+
+  actionButtons: {
+
+    position: 'absolute',
+    right: 10,
+    top: 5
+
+  },
+
+  postContainer: {
+
+    position: 'relative'
+
+  }
+
+};
 
 export default Profile;

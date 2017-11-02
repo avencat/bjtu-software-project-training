@@ -126,6 +126,14 @@ export default class Profile extends Component {
     return (
       <div style={{position: 'relative'}}>
 
+        <Alert
+          visible={showFlashMessage}
+          message={flashMessage}
+          status={flashStatus}
+          dismissTimer={6000}
+          onDismiss={this.handleHideFlashMessage}
+        />
+
         <Nav location={this.props.location}/>
 
         <div className="col-sm-12">
@@ -152,14 +160,6 @@ export default class Profile extends Component {
           </div>
 
         </div>
-
-        <Alert
-          visible={showFlashMessage}
-          message={flashMessage}
-          status={flashStatus}
-          dismissTimer={6000}
-          onDismiss={this.handleHideFlashMessage}
-        />
 
       </div>
     );

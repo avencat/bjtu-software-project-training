@@ -97,14 +97,13 @@ export default class PostModal extends Component {
               <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
               <h4 className="modal-title">Modify your post {this.props.id}</h4>
             </div>
-            <form onSubmit={this.onModify}>
-              <div className="modal-body">
-                <input value={this.state.putPost} name="putPost" id="putPost" onChange={this.onChange.bind(this)}/>
+            <form onSubmit={this.onModify} id={'myForm' + this.props.id}>
+              <div className="modal-body" style={styles.modalBody}>
+                <textarea value={this.state.putPost} name="putPost" form={'myForm' + this.props.id} id="putPost" onChange={this.onChange.bind(this)} style={styles.inputStyle} ref="input"/>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
+                <button className="btn btn-danger" type="button" style={styles.deleteButton}><i className="material-icons" onClick={this.onDelete.bind(this)}>delete</i></button>
                 <button className="btn btn-primary" type="submit" value="Submit">Save changes</button>
-                <button className="btn btn-outline-danger" type="button"><i className="material-icons" onClick={this.onDelete.bind(this)}>delete</i></button>
               </div>
             </form>
           </div>
@@ -113,6 +112,37 @@ export default class PostModal extends Component {
     )
   };
 }
+
+
+const styles = {
+
+  deleteButton: {
+
+    paddingBottom: 3
+
+  },
+
+  inputStyle: {
+
+    border: 'none',
+    fontSize: 21,
+    fontWeight: 200,
+    height: 75,
+    maxWidth: '100%',
+    outline: 'none',
+    padding: '0px 15px',
+    resize: 'none',
+    width: '100%'
+
+  },
+
+  modalBody: {
+
+    padding: 0
+
+  }
+
+};
 
 
 PostModal.propTypes = {

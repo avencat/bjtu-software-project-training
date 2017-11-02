@@ -4,6 +4,7 @@ import '../App.css';
 
 export default class Nav extends Component {
 
+
   constructor(props) {
     super(props);
 
@@ -12,12 +13,13 @@ export default class Nav extends Component {
     this.onLogout = this.onLogout.bind(this);
   }
 
+
   componentWillMount() {
     const isLoggedIn = sessionStorage.getItem("userToken");
 
     this.MyButton = (
-      <li><button className="btn btn-info log">
-        <Link to="/login">
+      <li><button className="btn btn-warning log">
+        <Link to="/login" style={styles.whiteLink}>
           Log In
         </Link>
       </button></li>
@@ -28,7 +30,7 @@ export default class Nav extends Component {
       this.MyButton = (
         <li>
           <button onClick={this.onLogout} className="btn btn-danger log">
-            <Link to="/login">
+            <Link to="/login" style={styles.whiteLink}>
               Log out
             </Link>
           </button>
@@ -39,8 +41,8 @@ export default class Nav extends Component {
 
       this.MyButton = (
         <li>
-          <button className="btn log">
-            <Link to="/Register">
+          <button className="btn btn-success log">
+            <Link to="/Register" style={styles.whiteLink}>
               Register
             </Link>
           </button>
@@ -50,11 +52,14 @@ export default class Nav extends Component {
     }
   }
 
+
   onLogout() {
     sessionStorage.removeItem("userToken");
     sessionStorage.removeItem("userId");
     // TODO call server function to delete the token on the server too
   }
+
+
   render() {
 
 
@@ -103,3 +108,14 @@ export default class Nav extends Component {
     );
   }
 }
+
+
+const styles = {
+
+  whiteLink: {
+
+    color: 'white'
+
+  }
+
+};

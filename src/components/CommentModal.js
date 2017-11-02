@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import Comment from "./Comment";
 
 export default class CommentModal extends Component {
 
@@ -96,14 +97,7 @@ export default class CommentModal extends Component {
         console.log(data)
 
         const listComment = data.data.map((oneComment) =>
-          <li key={oneComment.id} className="list-group-item">
-            <div>
-              <div className="row">
-                <b>{ (oneComment.user.firstname && oneComment.user.lastname) ? oneComment.user.firstname + ' ' + oneComment.user.lastname : oneComment.user.login }</b>
-                <p>{ oneComment.content }</p>
-              </div>
-            </div>
-          </li>
+          <Comment comment={oneComment} key={oneComment.id} />
         );
 
         this.setState({
@@ -130,12 +124,12 @@ export default class CommentModal extends Component {
             <div className="modal-header">
               <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
               <h3 className="modal-title">{this.props.login}</h3>
-              <p>{this.props.post}</p>
+              <p style={styles.paragraph}>{this.props.post}</p>
             </div>
-            <form onSubmit={this.onSubmit.bind(this)}>
+            <form onSubmit={this.onSubmit.bind(this)} id={"myCommentModalForm" + this.props.id}>
               <div className="modal-body">
-                <input className="col-lg-8" placeholder="Write a comment" name="comment" id="comment" onChange={this.onChange.bind(this)}/>
-                <button className="btn btn-primary" type="submit" value="Submit">Submit</button>
+                <textarea className="col-lg-8" placeholder="Write a comment" name="comment" id="comment" form={"myCommentModalForm" + this.props.id} onChange={this.onChange.bind(this)} style={styles.textArea}/>
+                <button className="btn btn-primary" type="submit" value="Submit" style={styles.submitButton}>Submit</button>
               </div>
               <div>
                 <ul className="list-group">
@@ -151,7 +145,40 @@ export default class CommentModal extends Component {
 }
 
 
+const styles = {
+
+  paragraph: {
+
+    WebkitHyphens: 'auto',
+    MozHyphens: 'auto',
+    msHyphens: 'auto',
+    OHyphens: 'auto',
+    hyphens: 'auto',
+    wordWrap: 'break-word'
+
+  },
+
+  submitButton: {
+
+    marginLeft: 15
+
+  },
+
+  textArea: {
+
+    border: 'none',
+    maxWidth: '100%',
+    outline: 'none',
+    resize: 'none',
+    width: '100%'
+
+  }
+
+};
+
+
 CommentModal.propTypes = {
+
   login: PropTypes.string.isRequired,
   post: PropTypes.string.isRequired,
   id: PropTypes.number.isRequired,

@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS socialnetwork;
-CREATE DATABASE socialnetwork;
+DROP DATABASE IF EXISTS socialnetworktest;
+CREATE DATABASE socialnetworktest;
 
-\c socialnetwork;
+\c socialnetworktest;
 
 CREATE TABLE      users (
   id              SERIAL PRIMARY KEY,
@@ -95,20 +95,24 @@ CREATE FUNCTION manage_comments_nb()
   BEGIN
 
     -- Check that post_id is given
-    IF NEW.post_id IS NULL THEN
-      RAISE EXCEPTION 'post_id cannot be null';
+    IF (TG_OP = 'INSERT') THEN
+      IF NEW.post_id IS NULL THEN
+        RAISE EXCEPTION 'post_id cannot be null';
+      END IF;
     END IF;
 
     -- Substract or add one to comments_nb
     IF (TG_OP = 'DELETE') THEN
-      UPDATE posts SET comments_nb = comments_nb - 1 WHERE id = NEW.post_id;
+      UPDATE posts SET comments_nb = comments_nb - 1 WHERE id = OLD.post_id;
     ELSE
       UPDATE posts SET comments_nb = comments_nb + 1 WHERE id = NEW.post_id;
     END IF;
 
     -- Fill the time fields
-    NEW.created := current_timestamp;
-    NEW.updated := current_timestamp;
+    IF (TG_OP = 'INSERT') THEN
+      NEW.created := current_timestamp;
+      NEW.updated := current_timestamp;
+    END IF;
 
     RETURN NEW;
 
@@ -197,7 +201,7 @@ BEGIN
 
 END
 
-$trigger_sanitize_username_and_email$LANGUAGE plpgsql;
+$trigger_sanitize_username_and_email$ LANGUAGE plpgsql;
 
 
 CREATE FUNCTION manage_posts()
@@ -212,15 +216,15 @@ BEGIN
 
   -- Fill the time fields
   IF (TG_OP = 'INSERT') THEN
-    OLD.created := current_timestamp;
+    NEW.created := current_timestamp;
   END IF;
-  OLD.updated := current_timestamp;
+  NEW.updated := current_timestamp;
 
   RETURN NEW;
 
 END
 
-$trigger_manage_posts$LANGUAGE plpgsql;
+$trigger_manage_posts$ LANGUAGE plpgsql;
 
 
 CREATE FUNCTION manage_comments()
@@ -245,7 +249,7 @@ BEGIN
 
 END
 
-$trigger_manage_comments$LANGUAGE plpgsql;
+$trigger_manage_comments$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER trigger_manage_posts

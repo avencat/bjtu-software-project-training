@@ -72,7 +72,7 @@ export default class Nav extends Component {
         <div className="navbar-header">
 
           <Link className="navbar-brand" to="/">
-            <p style={styleNavBarText}>Home</p>
+            <span style={styleNavBarText}>Home</span>
           </Link>
 
           {
@@ -82,7 +82,7 @@ export default class Nav extends Component {
 
                 <li>
                   <Link to="/profile">
-                    <p style={styleNavBarText}>Profile</p>
+                    <span style={styleNavBarText}>Profile</span>
                   </Link>
                 </li>
 

@@ -47,7 +47,7 @@ let db = require('../queries/comments');
  *           "author_id": 1
  *         }
  *       ],
- *       "message": "Retrieved posts"
+ *       "message": "Retrieved comments"
  *     }
  *
  * @apiError CommentNotFound The id of the Comment was not found.
@@ -60,6 +60,57 @@ let db = require('../queries/comments');
  *     }
  */
 router.get('/', passport.authenticate('jwt', { session: false }), db.getComments);
+
+/**
+ * @api {get} /comments/:id Request specific Comment.
+ * @apiName GetComment
+ * @apiGroup Comment
+ *
+ * @apiParam {Number} id   [Optional] Comment unique ID (Primary key).
+ *
+ * @apiExample {js} Fetch example:
+ *   fetch("http://localhost:3001/comments/" + some_comment_id, {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ *
+ * @apiSuccess {String} status      Success status.
+ * @apiSuccess {String} message     Success message.
+ * @apiSuccess {Object} data        Content of the Comment.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "status": "success",
+ *       "data": {
+ *         "id": 1,
+ *         "content": "Lorem ipsum...",
+ *         "post_id": 1,
+ *         "author_id": 1,
+ *         "created": DATE,
+ *         "updated": DATE
+ *       },
+ *       "message": "Retrieved Comment 1"
+ *     }
+ *
+ * @apiError CommentNotFound The id of the Comment was not found.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "status": "error",
+ *       "message": "Comment not found"
+ *     }
+ */
+router.get('/:id', passport.authenticate('jwt', { session: false }), db.getComment);
 
 /**
  * @api {post} /comments Create a Comment.

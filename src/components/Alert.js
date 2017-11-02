@@ -20,8 +20,6 @@ export default class Alert extends Component {
 
     if (this.props.visible) {
 
-      console.log('setTimeout');
-
       this.timeout = setTimeout(this.resetTimer, this.props.dismissTimer || 5000);
 
     }
@@ -30,7 +28,7 @@ export default class Alert extends Component {
 
       <div
         className={'alert alert-dismissible fade show alert-' + this.props.status + ' ' + (this.props.visible ? 'in' : 'out')}
-        style={styles.alert}
+        style={this.props.visible ? styles.alert : styles.alertHidden}
       >
         <button type="button" className="close" aria-label="Close" onClick={this.resetTimer}>
             <span aria-hidden="true">&times;</span>
@@ -51,6 +49,12 @@ const styles = {
     position: 'absolute',
     width: "100%",
     top: 25
+
+  },
+
+  alertHidden: {
+
+    zIndex: -1
 
   }
 

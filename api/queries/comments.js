@@ -30,15 +30,17 @@ function createComment(req, res, next) {
 
   } else {
 
-    db.none('INSERT into comments(author_id, post_id, content, likes_nb, created, updated)' +
-      'values(${author_id}, ${post_id}, ${content}, 0, ${created}, ${created})',
+    db.one('INSERT into comments(author_id, post_id, content, likes_nb, created, updated)' +
+      'values(${author_id}, ${post_id}, ${content}, 0, ${created}, ${created}) ' +
+      'RETURNING comments.id AS comment_id',
       body)
-      .then(() => {
+      .then((response) => {
 
         res.status(201)
           .json({
 
             status: 'success',
+            comment_id: response.comment_id,
             message: 'Inserted one comment from user ' + body.author_id + ' to post ' + body.post_id
 
           });
@@ -109,6 +111,62 @@ function findCommentById(id, cb) {
 
     })
 
+}
+
+function getComment(req, res, next) {
+
+  const comment_id = parseInt(req.params.id);
+
+  if (comment_id) {
+
+    db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
+      'users.login, users.firstname, users.lastname ' +
+      'FROM comments INNER JOIN users ON comments.author_id = users.id ' +
+      'WHERE comments.id = $1',
+      comment_id)
+
+      .then((data) => {
+
+        if (Array.isArray(data)) {
+
+          return (serializeComments(data));
+
+        } else {
+
+          return (serializeComment(data));
+
+        }
+
+      })
+      .then((data) => {
+
+        res.status(200)
+          .json({
+
+            status: 'success',
+            data,
+            message: 'Retrieved comment'
+
+          });
+
+      })
+      .catch(function (err) {
+
+        return next(err);
+
+      });
+
+  } else {
+
+    res.status(400)
+      .json({
+
+        status: 'error',
+        message: 'id not provided.'
+
+      });
+
+  }
 }
 
 function getComments(req, res, next) {
@@ -265,6 +323,7 @@ module.exports = {
   deleteComment,
   findCommentById,
   getComments,
+  getComment,
   updateComment,
   serializeComment,
   serializeComments

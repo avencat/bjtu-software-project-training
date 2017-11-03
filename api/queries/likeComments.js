@@ -22,15 +22,17 @@ function createLikeComment(req, res, next) {
 
   } else {
 
-    db.none('INSERT into comment_likes(user_id, comment_id, created, updated)' +
-      'values(${user_id}, ${comment_id}, ${created}, ${created})',
+    db.one('INSERT INTO comment_likes(user_id, comment_id, created, updated) ' +
+      'values(${user_id}, ${comment_id}, ${created}, ${created}) ' +
+      'RETURNING comment_likes.id AS comment_like_id',
       body)
-      .then(() => {
+      .then((response) => {
 
         res.status(201)
           .json({
 
             status: 'success',
+            comment_like_id: response.comment_like_id,
             message: 'Inserted one like to comment ' + body.comment_id
 
           });

@@ -90,6 +90,7 @@ router.get('/', passport.authenticate('jwt', { session: false }), db.getLikeComm
  *     HTTP/1.1 201 Created
  *     {
  *       "status": "success",
+ *       "comment_like_id": 1,
  *       "message": "Inserted one like to comment 1"
  *     }
  */

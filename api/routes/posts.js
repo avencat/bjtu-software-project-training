@@ -256,6 +256,7 @@ router.get('/:id', passport.authenticate('jwt', { session: false }), db.getSingl
  *     HTTP/1.1 201 Created
  *     {
  *       "status": "success",
+ *       "post_id": 1,
  *       "message": "Inserted one post for user 1"
  *     }
  */

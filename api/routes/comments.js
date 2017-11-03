@@ -145,6 +145,7 @@ router.get('/:id', passport.authenticate('jwt', { session: false }), db.getComme
  *     HTTP/1.1 201 Created
  *     {
  *       "status": "success",
+ *       "comment_id": 1,
  *       "message": "Inserted one comment to post 1"
  *     }
  */

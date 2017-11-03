@@ -87,7 +87,7 @@ export default class UserForm extends Component {
         </div>
 
         <div>
-          <input className="btn btn-lg btn-success" type="submit" value="Submit"/>
+          <input className="btn btn-lg btn-primary" type="submit" value="Submit"/>
         </div>
 
       </form>

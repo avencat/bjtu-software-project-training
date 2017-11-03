@@ -134,7 +134,7 @@ export default class Profile extends Component {
           onDismiss={this.handleHideFlashMessage}
         />
 
-        <Nav location={this.props.location}/>
+        <Nav location={this.props.location} router={this.props.router} />
 
         <div className="col-sm-12">
 

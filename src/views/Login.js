@@ -17,8 +17,6 @@ class Login extends Component {
     this.flashStatus = null;
     this.flashMessage = null;
 
-    console.log(props);
-
     if (props.location.state) {
 
       this.flashStatus = props.location.state.flashStatus;
@@ -81,7 +79,23 @@ class Login extends Component {
     return (
       <div style={{position: 'relative'}}>
 
-        <Nav location={this.props.location}/>
+        {
+          this.flashMessage && this.flashStatus ?
+
+            <Alert
+              visible={this.state.alertVisible}
+              message={this.flashMessage}
+              status={this.flashStatus}
+              dismissTimer={6000}
+              onDismiss={this.handleAlertDismiss}
+            />
+
+          :
+
+            <div/>
+        }
+
+        <Nav location={this.props.location} router={this.props.router} />
 
         <div className="col-sm-12">
 
@@ -116,7 +130,7 @@ class Login extends Component {
               </div>
 
               <div>
-                <input className="btn btn-lg btn-success" type="submit" value="Submit" />
+                <input className="btn btn-lg btn-primary" type="submit" value="Submit" />
               </div>
 
             </form>
@@ -124,22 +138,6 @@ class Login extends Component {
           </div>
 
         </div>
-
-        {
-          this.flashMessage && this.flashStatus ?
-
-            <Alert
-              visible={this.state.alertVisible}
-              message={this.flashMessage}
-              status={this.flashStatus}
-              dismissTimer={6000}
-              onDismiss={this.handleAlertDismiss}
-            />
-
-          :
-
-            <div/>
-        }
 
       </div>
     );

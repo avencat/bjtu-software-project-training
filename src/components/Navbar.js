@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
+import PropTypes from 'prop-types';
 import '../App.css';
 
-export default class Nav extends Component {
+export default class Navbar extends Component {
 
 
   constructor(props) {
@@ -10,7 +11,9 @@ export default class Nav extends Component {
 
     this.user = sessionStorage.getItem("userToken");
 
+    this.onLogin = this.onLogin.bind(this);
     this.onLogout = this.onLogout.bind(this);
+    this.onRegister = this.onRegister.bind(this);
   }
 
 
@@ -18,11 +21,11 @@ export default class Nav extends Component {
     const isLoggedIn = sessionStorage.getItem("userToken");
 
     this.MyButton = (
-      <li><button className="btn btn-warning log">
-        <Link to="/login" style={styles.whiteLink}>
-          Log In
-        </Link>
-      </button></li>
+      <li>
+        <button onClick={this.onLogin} className="btn btn-warning log" style={styles.whiteLink}>
+          Sign in
+        </button>
+      </li>
     );
 
     if (isLoggedIn) {
@@ -30,9 +33,7 @@ export default class Nav extends Component {
       this.MyButton = (
         <li>
           <button onClick={this.onLogout} className="btn btn-danger log">
-            <Link to="/login" style={styles.whiteLink}>
-              Log out
-            </Link>
+            Sign out
           </button>
         </li>
       )
@@ -41,10 +42,8 @@ export default class Nav extends Component {
 
       this.MyButton = (
         <li>
-          <button className="btn btn-success log">
-            <Link to="/Register" style={styles.whiteLink}>
-              Register
-            </Link>
+          <button className="btn btn-success log" onClick={this.onRegister}>
+            Register
           </button>
         </li>
       );
@@ -53,10 +52,27 @@ export default class Nav extends Component {
   }
 
 
+  onLogin() {
+
+    this.props.router.replace({ pathname: '/login' });
+
+  }
+
+
   onLogout() {
+
     sessionStorage.removeItem("userToken");
     sessionStorage.removeItem("userId");
+    this.props.router.replace({ pathname: '/login', state: { flashStatus: "info", flashMessage: "Goodbye!" } });
     // TODO call server function to delete the token on the server too
+
+  }
+
+
+  onRegister() {
+
+    this.props.router.replace({ pathname: '/register' });
+
   }
 
 
@@ -117,5 +133,12 @@ const styles = {
     color: 'white'
 
   }
+
+};
+
+Navbar.propTypes = {
+
+  router: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired
 
 };

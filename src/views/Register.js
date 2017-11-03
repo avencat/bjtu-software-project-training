@@ -81,7 +81,7 @@ class Register extends Component {
     return (
       <div>
 
-        <Nav location={this.props.location}/>
+        <Nav location={this.props.location} router={this.props.router} />
 
         <div className="col-sm-12">
 

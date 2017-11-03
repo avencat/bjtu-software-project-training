@@ -104,7 +104,7 @@ router.post('/', passport.authenticate('jwt', { session: false }), db.createLike
  * @apiParam {Number} id           [Mandatory] ID of the LikeComment.
  *
  * @apiExample {js} Fetch example:
- *   fetch("http://localhost:3001/likeCommentslikeComments/" + some_like_comment_id, {
+ *   fetch("http://localhost:3001/likeComments/" + some_like_comment_id, {
  *
  *      method: 'DELETE',
  *

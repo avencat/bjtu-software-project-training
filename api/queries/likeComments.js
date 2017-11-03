@@ -118,8 +118,8 @@ function getLikeComments(req, res, next) {
     const comment_id = parseInt(req.query.comment_id);
 
     db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.comment_id, comment_likes.created, comment_likes.updated,' +
-      'users.login, users.firstname, users.lastname' +
-      'FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id' +
+      'users.login, users.firstname, users.lastname ' +
+      'FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id ' +
       'WHERE comment_likes.comment_id = $1',
       comment_id)
 

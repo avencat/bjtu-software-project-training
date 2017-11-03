@@ -171,7 +171,7 @@ export default class Post extends Component {
             />
             <span style={styles.actionButtons}>
 
-              <button className={"btn btn-" + (isLike ? 'danger' : 'primary')} type="button" onClick={() => { isLike ? this.onDislike(likeId) : this.onLike(post.id)}}>
+              <button className={"btn btn-" + (isLike ? 'danger' : 'primary')} type="button" onClick={() => { isLike ? this.onDislike(likeId) : this.onLike(post.id)}}  style={styles.actionButton}>
 
                 <i className="material-icons">{isLike ? 'thumb_down' : 'thumb_up'}</i>
 
@@ -182,7 +182,7 @@ export default class Post extends Component {
                 <i className="material-icons">comment</i>
               </button>
 
-              <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + post.id} style={styles.actionButton}>
+              <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + post.id}>
                 <i className="material-icons">mode_edit</i>
               </button>
 

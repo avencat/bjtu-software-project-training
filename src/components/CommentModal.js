@@ -11,7 +11,6 @@ export default class CommentModal extends Component {
       comment: '',
       listComment: [],
     };
-
   }
 
   onChange(e) {
@@ -111,6 +110,7 @@ export default class CommentModal extends Component {
     });
 
   }
+
 
   render() {
 

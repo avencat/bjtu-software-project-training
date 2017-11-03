@@ -12,13 +12,19 @@ export default class Comment extends Component {
 
       editing: false,
       comment: this.props.comment || {},
-      content: this.props.comment ? this.props.comment.content : ''
+      content: this.props.comment ? this.props.comment.content : '',
+      isLike: false,
+      likeId: null,
 
     };
 
     this.onDelete = this.onDelete.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
+
+    this.onLike = this.onLike.bind(this);
+    this.onDislike = this.onDislike.bind(this);
+    this.getListLikes = this.getListLikes.bind(this);
 
   }
 
@@ -123,10 +129,129 @@ export default class Comment extends Component {
 
   }
 
+  getListLikes(commentId) {
+
+    fetch("http://localhost:3001/likeComments?comment_id=" + commentId, {
+
+      method: 'GET',
+
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+      }
+
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+
+
+      if (data.status === "success") {
+
+        const listLikes = data.data;
+
+        for (let i = 0; i < listLikes.length; i++) {
+          if (listLikes[i].user.id === sessionStorage.getItem("userId")) {
+            console.log(listLikes[i].user.id + " " + sessionStorage.getItem("userId"))
+
+            this.setState({
+
+              isLike: true,
+              likeId: listLikes[i].id
+
+            });
+          }
+        }
+      }
+
+    }).catch((err) => {
+      console.log(err)
+    })
+
+  }
+
+
+  onLike(commentId) {
+
+    fetch("http://localhost:3001/likeComments", {
+
+      method: 'POST',
+
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+      },
+
+      body: JSON.stringify({
+        "comment_id": commentId
+      })
+
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+
+      console.log(data)
+
+      if (data.status === "success") {
+
+        this.setState({ isLike: true, likeId: data.comment_like_id });
+
+      }
+
+    }).catch((err) => {
+      console.log(err)
+    });
+
+  }
+
+
+  onDislike(likeId) {
+
+    if (!likeId) {
+
+      console.log("Pas de likeId");
+      return ;
+
+    }
+
+    fetch("http://localhost:3001/likeComments/" + likeId, {
+
+      method: 'DELETE',
+
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+      }
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+
+      console.log(data)
+
+      if (data.status === "success") {
+
+        this.setState({ isLike: false, likeId: null });
+
+      }
+
+    }).catch((err) => {
+      console.log(err)
+    });
+
+  }
+
+  componentDidMount() {
+
+    this.getListLikes(this.state.comment.id);
+
+  }
+
 
   render() {
 
-    const { comment, editing, content } = this.state;
+    const { comment, editing, content, isLike, likeId } = this.state;
 
     return (
 
@@ -220,6 +345,24 @@ export default class Comment extends Component {
                   </button>
 
                   <p style={styles.paragraph}>{ content }</p>
+
+                  <button
+
+                    type="button"
+                    style={styles.actionButton}
+                    className={"btn btn-" + (isLike ? 'danger' : 'primary')}
+
+                    onClick={() => {
+
+                      isLike ? this.onDislike(likeId) : this.onLike(comment.id);
+
+                    }}
+
+                  >
+
+                    <i className="material-icons">{isLike ? 'thumb_down' : 'thumb_up'}</i>
+
+                  </button>
 
                 </div>
 

@@ -170,26 +170,20 @@ export default class Post extends Component {
               onModify={this.props.fetchPosts}
             />
             <span style={styles.actionButtons}>
-              <button className="btn btn-primary" type="button" data-toggle="modal" data-target={"#myCommentModal" + post.id} style={styles.actionButton}>
-                <i className="material-icons">comment</i>
-              </button>
-              <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + post.id}>
-                <i className="material-icons">mode_edit</i>
-              </button>
-              <p>{post.user.likes_nb}</p>
 
-              <button
-                className={"btn btn-" + (isLike ? 'danger' : 'primary')}
-                type="button"
-                onClick={() => {
-
-                  isLike ? this.onDislike(likeId) : this.onLike(post.id);
-
-                }}
-              >
+              <button className={"btn btn-" + (isLike ? 'danger' : 'primary')} type="button" onClick={() => { isLike ? this.onDislike(likeId) : this.onLike(post.id)}}>
 
                 <i className="material-icons">{isLike ? 'thumb_down' : 'thumb_up'}</i>
 
+              </button>
+
+
+              <button className="btn btn-primary" type="button" data-toggle="modal" data-target={"#myCommentModal" + post.id} style={styles.actionButton}>
+                <i className="material-icons">comment</i>
+              </button>
+
+              <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + post.id} style={styles.actionButton}>
+                <i className="material-icons">mode_edit</i>
               </button>
 
             </span>

@@ -54,7 +54,7 @@ export default class UserForm extends Component {
 
           <div className="input-group col-sm-8">
             <input className="form-control" required={this.props.emailRequired} type="email" value={this.props.email} name='email' id="email" onChange={this.props.onChange}/>
-            <span className="input-group-addon"><i className="material-icons">@</i></span>
+            <span className="input-group-addon"><i className="material-icons">mail</i></span>
           </div>
 
           <span className="col-sm-1"/>

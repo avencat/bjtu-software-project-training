@@ -27,8 +27,8 @@ CREATE TABLE      friendship (
   following_date  TIMESTAMPTZ,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  FOREIGN KEY     (follower_id)   REFERENCES users(id),
-  FOREIGN KEY     (following_id)  REFERENCES users(id),
+  FOREIGN KEY     (follower_id)   REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY     (following_id)  REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE          (follower_id, following_id)
 );
 
@@ -40,7 +40,7 @@ CREATE TABLE      posts (
   updated         TIMESTAMPTZ,
   comments_nb     BIGINT,
   likes_nb        BIGINT,
-  FOREIGN KEY     (author_id) REFERENCES users(id)
+  FOREIGN KEY     (author_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE      comments (
@@ -51,28 +51,30 @@ CREATE TABLE      comments (
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
   likes_nb        BIGINT,
-  FOREIGN KEY     (author_id) REFERENCES users(id),
-  FOREIGN KEY     (post_id)   REFERENCES posts(id)
+  FOREIGN KEY     (author_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY     (post_id)   REFERENCES posts(id) ON DELETE CASCADE
 );
 
 CREATE TABLE      post_likes (
   id              SERIAL PRIMARY KEY,
-  user_id         BIGINT UNIQUE NOT NULL,
-  post_id         BIGINT UNIQUE NOT NULL,
+  user_id         BIGINT NOT NULL,
+  post_id         BIGINT NOT NULL,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  FOREIGN KEY     (user_id) REFERENCES users(id),
-  FOREIGN KEY     (post_id) REFERENCES posts(id)
+  UNIQUE          (user_id, post_id),
+  FOREIGN KEY     (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY     (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
 CREATE TABLE      comment_likes (
   id              SERIAL PRIMARY KEY,
-  user_id         BIGINT UNIQUE NOT NULL,
-  comment_id      BIGINT UNIQUE NOT NULL,
+  user_id         BIGINT NOT NULL,
+  comment_id      BIGINT NOT NULL,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  FOREIGN KEY     (user_id)     REFERENCES users(id),
-  FOREIGN KEY     (comment_id)  REFERENCES comments(id)
+  UNIQUE          (user_id, comment_id),
+  FOREIGN KEY     (user_id)     REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY     (comment_id)  REFERENCES comments(id) ON DELETE CASCADE
 );
 
 CREATE TABLE      gender (

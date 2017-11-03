@@ -31,7 +31,7 @@ function createLike(req, res, next) {
           .json({
 
             status: 'success',
-            message: 'Inserted one like from user ' + body.author_id + ' to post ' + body.post_id
+            message: 'Inserted one like from user ' + body.user_id + ' to post ' + body.post_id
 
           });
 

@@ -17,7 +17,7 @@ function createLikeComment(req, res, next) {
     res.status(400)
       .json({
         status: 'error',
-        message: 'post_id can not be null.'
+        message: 'comment_id can not be null.'
       });
 
   } else {
@@ -113,15 +113,15 @@ function findLikeCommentsById(id, cb) {
 
 function getLikeComments(req, res, next) {
 
-  if (req.query.post_id) {
+  if (req.query.comment_id) {
 
-    const post_id = parseInt(req.query.post_id);
+    const comment_id = parseInt(req.query.comment_id);
 
-    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.post_id, comment_likes.created, comment_likes.updated,' +
+    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.comment_id, comment_likes.created, comment_likes.updated,' +
       'users.login, users.firstname, users.lastname' +
       'FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id' +
-      'WHERE comment_likes.post_id = $1',
-      post_id)
+      'WHERE comment_likes.comment_id = $1',
+      comment_id)
 
       .then((data) => {
 
@@ -160,7 +160,7 @@ function getLikeComments(req, res, next) {
       .json({
 
         status: 'error',
-        message: 'post_id not provided.'
+        message: 'comment_id not provided.'
 
       });
 

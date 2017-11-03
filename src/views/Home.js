@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import Alert from '../components/Alert';
-import PostModal from '../components/PostModal';
-import CommentModal from '../components/CommentModal';
+import Post from '../components/Post';
 
 
-class Profile extends Component {
+export default class Profile extends Component {
 
   constructor(props) {
     super(props);
@@ -48,26 +47,8 @@ class Profile extends Component {
 
   }
 
+
   fetchPosts() {
-
-    let stylePostLogin = {
-
-      fontSize: 20
-
-    };
-
-    let stylePostContent = {
-
-      fontSize: 21,
-      marginTop: 10,
-      WebkitHyphens: 'auto',
-      MozHyphens: 'auto',
-      msHyphens: 'auto',
-      OHyphens: 'auto',
-      hyphens: 'auto',
-      wordWrap: 'break-word'
-
-    };
 
     if (this.state.user) {
 
@@ -86,36 +67,10 @@ class Profile extends Component {
 
         if (data.status === "success") {
 
+          console.log(data)
+
           const listPosts = data.data.map((onePost) =>
-            <li key={onePost.id} className="list-group-item" style={styles.postContainer}>
-              <div>
-                <div className="row">
-                  <PostModal
-                    id={onePost.id}
-                    post={onePost.content}
-
-                    onModify={this.fetchPosts}
-                  />
-                  <b className="col-lg-10" style={stylePostLogin}>{(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}</b>
-                  <CommentModal
-                    id={onePost.id}
-                    post={onePost.content}
-                    login={(onePost.user.firstname && onePost.user.lastname) ? onePost.user.firstname + ' ' + onePost.user.lastname : onePost.user.login}
-
-                    onModify={this.fetchPosts}
-                  />
-                  <span style={styles.actionButtons}>
-                    <button className="btn btn-primary" type="button" data-toggle="modal" data-target={"#myCommentModal" + onePost.id} style={styles.actionButton}>
-                      <i className="material-icons">comment</i>
-                    </button>
-                    <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + onePost.id}>
-                      <i className="material-icons">mode_edit</i>
-                    </button>
-                  </span>
-                </div>
-                <p style={stylePostContent}>{onePost.content}</p>
-              </div>
-            </li>
+            <Post post={onePost} key={onePost.id} fetchPosts={this.fetchPosts}/>
           );
 
           this.setState({
@@ -259,30 +214,3 @@ class Profile extends Component {
     );
   }
 }
-
-
-const styles = {
-
-  actionButton: {
-
-    marginRight: 10
-
-  },
-
-  actionButtons: {
-
-    position: 'absolute',
-    right: 10,
-    top: 5
-
-  },
-
-  postContainer: {
-
-    position: 'relative'
-
-  }
-
-};
-
-export default Profile;

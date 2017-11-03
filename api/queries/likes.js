@@ -22,15 +22,17 @@ function createLike(req, res, next) {
 
   } else {
 
-    db.none('INSERT into post_likes(user_id, post_id, created, updated)' +
-      'values(${user_id}, ${post_id}, ${created}, ${created})',
+    db.one('INSERT into post_likes(user_id, post_id, created, updated) ' +
+      'values(${user_id}, ${post_id}, ${created}, ${created}) ' +
+      'RETURNING post_likes.id AS like_id',
       body)
-      .then(() => {
+      .then((response) => {
 
         res.status(201)
           .json({
 
             status: 'success',
+            like_id: response.like_id,
             message: 'Inserted one like from user ' + body.user_id + ' to post ' + body.post_id
 
           });

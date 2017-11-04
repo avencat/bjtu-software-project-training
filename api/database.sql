@@ -114,9 +114,11 @@ CREATE FUNCTION manage_comments_nb()
     IF (TG_OP = 'INSERT') THEN
       NEW.created := current_timestamp;
       NEW.updated := current_timestamp;
-    END IF;
 
-    RETURN NEW;
+      RETURN NEW;
+    ELSE
+      RETURN OLD;
+    END IF;
 
   END;
 
@@ -129,22 +131,28 @@ CREATE FUNCTION manage_likes_nb()
   BEGIN
 
     -- Check that post_id is given
-    IF NEW.post_id IS NULL THEN
-      RAISE EXCEPTION 'post_id cannot be null';
+    IF (TG_OP = 'INSERT') THEN
+      IF NEW.post_id IS NULL THEN
+        RAISE EXCEPTION 'post_id cannot be null';
+      END IF;
     END IF;
 
     -- Substract or add one to likes_nb
     IF (TG_OP = 'DELETE') THEN
-      UPDATE posts SET likes_nb = posts.likes_nb - 1 WHERE id = NEW.post_id;
+      UPDATE posts SET likes_nb = posts.likes_nb - 1 WHERE id = OLD.post_id;
     ELSE
       UPDATE posts SET likes_nb = posts.likes_nb + 1 WHERE id = NEW.post_id;
     END IF;
 
     -- Fill the time fields
-    NEW.created := current_timestamp;
-    NEW.updated := current_timestamp;
+    IF (TG_OP = 'INSERT') THEN
+      NEW.created := current_timestamp;
+      NEW.updated := current_timestamp;
 
-    RETURN NEW;
+      RETURN NEW;
+    ELSE
+      RETURN OLD;
+    END IF;
 
   END;
 
@@ -157,22 +165,28 @@ CREATE FUNCTION manage_comment_likes_nb()
   BEGIN
 
     -- Check that post_id is given
-    IF NEW.comment_id IS NULL THEN
-      RAISE EXCEPTION 'post_id cannot be null';
+    IF (TG_OP = 'INSERT') THEN
+      IF NEW.comment_id IS NULL THEN
+        RAISE EXCEPTION 'post_id cannot be null';
+      END IF;
     END IF;
 
     -- Substract or add one to likes_nb
     IF (TG_OP = 'DELETE') THEN
-      UPDATE comments SET likes_nb = comments.likes_nb - 1 WHERE id = NEW.comment_id;
+      UPDATE comments SET likes_nb = comments.likes_nb - 1 WHERE id = OLD.comment_id;
     ELSE
       UPDATE comments SET likes_nb = comments.likes_nb + 1 WHERE id = NEW.comment_id;
     END IF;
 
     -- Fill the time fields
-    NEW.created := current_timestamp;
-    NEW.updated := current_timestamp;
+    IF (TG_OP = 'INSERT') THEN
+      NEW.created := current_timestamp;
+      NEW.updated := current_timestamp;
 
-    RETURN NEW;
+      RETURN NEW;
+    ELSE
+      RETURN OLD;
+    END IF;
 
   END;
 

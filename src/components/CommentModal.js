@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Comment from "./Comment";
+import Textarea from 'react-textarea-autosize';
 
 export default class CommentModal extends Component {
 
@@ -8,9 +9,11 @@ export default class CommentModal extends Component {
     super(props);
 
     this.state = {
-      comment: '',
-      listComment: [],
+      newComment: '',
+      listComment: []
     };
+
+    this.fetchComments = this.fetchComments.bind(this);
   }
 
   onChange(e) {
@@ -36,7 +39,7 @@ export default class CommentModal extends Component {
       },
 
       body: JSON.stringify({
-        "content": this.state.comment,
+        "content": this.state.newComment,
         "post_id": this.props.id
       })
 
@@ -46,11 +49,12 @@ export default class CommentModal extends Component {
 
     }).then((data) => {
 
-      console.log(data)
-
       if (data.status === "success") {
 
-        window.location.reload()
+        this.fetchComments();
+        this.setState({
+          newComment: ''
+        });
 
       }
 
@@ -64,20 +68,23 @@ export default class CommentModal extends Component {
 
       });
 
-      console.log(err)
-
     });
   }
 
-  componentDidMount() {
+  componentWillReceiveProps(newProps) {
 
-    this.fetchComments();
+    if (newProps.id !== this.props.id) {
+      this.setState({newComment: ''});
+      this.fetchComments(newProps);
+    }
+
+    setTimeout(() => (this.textarea.focus()), 600);
 
   }
 
-  fetchComments() {
+  fetchComments(props = this.props) {
 
-    fetch("http://localhost:3001/comments?post_id=" + this.props.id, {
+    fetch("http://localhost:3001/comments?post_id=" + props.id, {
 
       method: 'GET',
 
@@ -93,20 +100,23 @@ export default class CommentModal extends Component {
 
       if (data.status === "success") {
 
-        console.log(data)
-
         const listComment = data.data.map((oneComment) =>
-          <Comment comment={oneComment} key={oneComment.id} />
+          <Comment comment={oneComment} key={oneComment.id} onModify={this.fetchComments} displayAlert={this.props.displayAlert} />
         );
 
         this.setState({
-          comment: data.data,
           listComment
         });
 
       }
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
 
   }
@@ -118,7 +128,7 @@ export default class CommentModal extends Component {
 
     return (
 
-      <div className="modal fade" id={"myCommentModal" + this.props.id} tabIndex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div className="modal fade" id={"myCommentModal"} tabIndex="-1" role="dialog" aria-labelledby="myModalLabel">
         <div className="modal-dialog" role="document">
           <div className="modal-content">
             <div className="modal-header">
@@ -126,17 +136,15 @@ export default class CommentModal extends Component {
               <h3 className="modal-title">{this.props.login}</h3>
               <p style={styles.paragraph}>{this.props.post}</p>
             </div>
-            <form onSubmit={this.onSubmit.bind(this)} id={"myCommentModalForm" + this.props.id}>
-              <div className="modal-body">
-                <textarea className="col-lg-8" placeholder="Write a comment" name="comment" id="comment" form={"myCommentModalForm" + this.props.id} onChange={this.onChange.bind(this)} style={styles.textArea}/>
+            <div className="modal-body" style={styles.modalBody}>
+              <form onSubmit={this.onSubmit.bind(this)} id={"myCommentModalForm"} style={styles.form}>
+                <Textarea value={this.state.newComment} className="col-lg-8" placeholder="Write a comment" name="newComment" id="newComment" form={"myCommentModalForm"} onChange={this.onChange.bind(this)} style={styles.textArea} inputRef={textarea => this.textarea = textarea} />
                 <button className="btn btn-primary" type="submit" value="Submit" style={styles.submitButton}>Submit</button>
-              </div>
-              <div>
-                <ul className="list-group">
-                  { listComment }
-                </ul>
-              </div>
-            </form>
+              </form>
+              <ul className="list-group">
+                { listComment }
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -147,8 +155,24 @@ export default class CommentModal extends Component {
 
 const styles = {
 
+  form: {
+
+    alignItems: 'flex-end',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: 15
+
+  },
+
+  modalBody: {
+
+    padding: 0
+
+  },
+
   paragraph: {
 
+    fontSize: 21,
     WebkitHyphens: 'auto',
     MozHyphens: 'auto',
     msHyphens: 'auto',
@@ -160,15 +184,18 @@ const styles = {
 
   submitButton: {
 
-    marginLeft: 15
+    width: 75
 
   },
 
   textArea: {
 
     border: 'none',
+    marginBottom: 5,
     maxWidth: '100%',
+    minHeight: '50px',
     outline: 'none',
+    padding: '2px 0px',
     resize: 'none',
     width: '100%'
 
@@ -183,4 +210,6 @@ CommentModal.propTypes = {
   post: PropTypes.string.isRequired,
   id: PropTypes.number.isRequired,
 
+  displayAlert: PropTypes.func.isRequired,
+  onModify: PropTypes.func.isRequired
 };

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import Textarea from 'react-textarea-autosize';
 
 export default class PostModal extends Component {
 
@@ -11,7 +12,26 @@ export default class PostModal extends Component {
     };
 
     this.onModify = this.onModify.bind(this);
+    this.moveCaretAtEnd = this.moveCaretAtEnd.bind(this);
   }
+
+
+  componentWillReceiveProps(newProps) {
+
+    if (newProps.id !== this.props.id) {
+      this.setState({putPost: newProps.post});
+      setTimeout(() => {this.textarea.focus()}, 600);
+    }
+
+  }
+
+
+  moveCaretAtEnd(e) {
+    let temp_value = e.target.value;
+    e.target.value = '';
+    e.target.value = temp_value
+  }
+
 
   onChange(e) {
     // Because we named the inputs to match their corresponding values in state, it's
@@ -20,6 +40,7 @@ export default class PostModal extends Component {
     state[e.target.name] = e.target.value;
     this.setState(state);
   }
+
 
   onModify(e) {
 
@@ -43,17 +64,28 @@ export default class PostModal extends Component {
       return data.json()
     }).then((data) => {
 
-      console.log(data);
-
       if (data.status === "success") {
 
+        this.buttonClose.click();
         this.props.onModify();
+        this.props.displayAlert(
+          "Post " + this.props.id + " successfully updated",
+          "success",
+          5000
+        );
 
       }
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
   }
+
 
   onDelete(e){
 
@@ -73,15 +105,25 @@ export default class PostModal extends Component {
       return data.json()
     }).then((data) => {
 
-      console.log(data);
-
       if (data.status === "success") {
 
-        window.location.reload();
+        this.props.onModify();
+        this.buttonClose.click();
+        this.props.displayAlert(
+          "Post " + this.props.id + " successfully removed",
+          "success",
+          5000
+        );
 
       }
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
 
   }
@@ -90,16 +132,16 @@ export default class PostModal extends Component {
   render() {
     return (
 
-      <div className="modal fade" id={"myModal" + this.props.id} tabIndex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div className="modal fade" id={"myModal"} tabIndex="-1" role="dialog" aria-labelledby="myModalLabel">
         <div className="modal-dialog" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close" ref={button => this.buttonClose = button}><span aria-hidden="true">&times;</span></button>
               <h4 className="modal-title">Modify your post {this.props.id}</h4>
             </div>
-            <form onSubmit={this.onModify} id={'myForm' + this.props.id}>
+            <form onSubmit={this.onModify} id={'myForm'}>
               <div className="modal-body" style={styles.modalBody}>
-                <textarea value={this.state.putPost} name="putPost" form={'myForm' + this.props.id} id="putPost" onChange={this.onChange.bind(this)} style={styles.inputStyle} ref="input"/>
+                <Textarea value={this.state.putPost} name="putPost" form={'myForm'} id="putPost" onChange={this.onChange.bind(this)} style={styles.inputStyle} inputRef={textarea => this.textarea = textarea} onFocus={this.moveCaretAtEnd}/>
               </div>
               <div className="modal-footer">
                 <button className="btn btn-danger" type="button" style={styles.deleteButton}><i className="material-icons" onClick={this.onDelete.bind(this)}>delete</i></button>
@@ -127,7 +169,7 @@ const styles = {
     border: 'none',
     fontSize: 21,
     fontWeight: 200,
-    height: 75,
+    minHeight: 75,
     maxWidth: '100%',
     outline: 'none',
     padding: '0px 15px',
@@ -151,5 +193,6 @@ PostModal.propTypes = {
   id: PropTypes.number.isRequired,
 
   onModify: PropTypes.func.isRequired,
+  displayAlert: PropTypes.func.isRequired
 
 };

@@ -37,12 +37,17 @@ export default class Profile extends Component {
     }).then((data) => {
       return data.json()
     }).then((data) => {
-      console.log(data);
       if (data.status === "success") {
         this.setState(data.user);
       }
     }).catch((err) => {
-      console.log(err)
+      this.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
   }
 
@@ -99,7 +104,13 @@ export default class Profile extends Component {
 
       }).catch((err) => {
 
-        console.log(err)
+        this.displayAlert(
+
+          (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+          'danger',
+          10000
+
+        );
 
       });
     }
@@ -146,10 +157,10 @@ export default class Profile extends Component {
 
               email={email}
               login={login}
-              lastname={lastname}
-              password={password}
-              firstname={firstname}
-              confirmedPassword={confirmedPassword}
+              lastname={lastname || ''}
+              password={password || ''}
+              firstname={firstname || ''}
+              confirmedPassword={confirmedPassword || ''}
 
               onChange={this.onChange.bind(this)}
               onSubmit={this.onSubmit.bind(this)}

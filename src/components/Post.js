@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import PostModal from './PostModal';
-import CommentModal from './CommentModal';
 
 
 export default class Post extends Component {
@@ -55,7 +53,6 @@ export default class Post extends Component {
 
         for (let i = 0; i < listLikes.length; i++) {
           if (listLikes[i].user.id === sessionStorage.getItem("userId")) {
-            console.log(listLikes[i].user.id + " " + sessionStorage.getItem("userId"))
 
             this.setState({
 
@@ -68,7 +65,15 @@ export default class Post extends Component {
       }
 
     }).catch((err) => {
-      console.log(err)
+
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
+
     })
 
   }
@@ -94,8 +99,6 @@ export default class Post extends Component {
       return data.json()
     }).then((data) => {
 
-      console.log(data)
-
       if (data.status === "success") {
 
         this.setState({ isLike: true, likeId: data.like_id });
@@ -103,7 +106,13 @@ export default class Post extends Component {
       }
 
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
 
   }
@@ -111,37 +120,38 @@ export default class Post extends Component {
 
   onDislike(likeId) {
 
-    if (!likeId) {
+    if (likeId) {
 
-      console.log("Pas de likeId");
-      return ;
+      fetch("http://localhost:3001/likes/" + likeId, {
+
+        method: 'DELETE',
+
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+        }
+      }).then((data) => {
+        return data.json()
+      }).then((data) => {
+
+        if (data.status === "success") {
+
+          this.setState({isLike: false, likeId: null});
+
+        }
+
+      }).catch((err) => {
+        this.props.displayAlert(
+
+          (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+          'danger',
+          10000
+
+        );
+      });
 
     }
-
-    fetch("http://localhost:3001/likes/" + likeId, {
-
-      method: 'DELETE',
-
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
-      }
-    }).then((data) => {
-      return data.json()
-    }).then((data) => {
-
-      console.log(data)
-
-      if (data.status === "success") {
-
-        this.setState({ isLike: false, likeId: null });
-
-      }
-
-    }).catch((err) => {
-      console.log(err)
-    });
 
   }
 
@@ -155,20 +165,8 @@ export default class Post extends Component {
       <li key={post.id} className="list-group-item" style={styles.postContainer}>
         <div>
           <div className="row">
-            <PostModal
-              id={post.id}
-              post={post.content}
-
-              onModify={this.props.fetchPosts}
-            />
             <b className="col-lg-10" style={styles.stylePostLogin}>{(post.user.firstname && post.user.lastname) ? post.user.firstname + ' ' + post.user.lastname : post.user.login}</b>
-            <CommentModal
-              id={post.id}
-              post={post.content}
-              login={(post.user.firstname && post.user.lastname) ? post.user.firstname + ' ' + post.user.lastname : post.user.login}
 
-              onModify={this.props.fetchPosts}
-            />
             <span style={styles.actionButtons}>
 
               <button className={"btn btn-" + (isLike ? 'danger' : 'primary')} type="button" onClick={() => { isLike ? this.onDislike(likeId) : this.onLike(post.id)}}  style={styles.actionButton}>
@@ -178,13 +176,22 @@ export default class Post extends Component {
               </button>
 
 
-              <button className="btn btn-primary" type="button" data-toggle="modal" data-target={"#myCommentModal" + post.id} style={styles.actionButton}>
+              <button className="btn btn-primary" type="button" data-toggle="modal" data-target={"#myCommentModal"} style={styles.actionButton} onClick={() => this.props.setModalComment(post)}>
                 <i className="material-icons">comment</i>
               </button>
 
-              <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal" + post.id}>
-                <i className="material-icons">mode_edit</i>
-              </button>
+              {
+                (post && post.user && post.user.id === sessionStorage.getItem("userId")) ?
+
+                  <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal"} style={styles.actionButton} onClick={() => this.props.setModalPost(post)}>
+                    <i className="material-icons">mode_edit</i>
+                  </button>
+
+                :
+
+                  <span/>
+
+              }
 
             </span>
           </div>
@@ -210,7 +217,7 @@ const styles = {
   actionButtons: {
 
     position: 'absolute',
-    right: 10,
+    right: 0,
     top: 5
 
   },
@@ -247,6 +254,8 @@ Post.propTypes = {
 
   post: PropTypes.object.isRequired,
 
-  fetchPosts: PropTypes.func.isRequired
+  displayAlert: PropTypes.func.isRequired,
+  setModalPost: PropTypes.func.isRequired,
+  setModalComment: PropTypes.func.isRequired
 
 };

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import UserForm from '../components/UserForm';
 import 'whatwg-fetch';
+import Alert from '../components/Alert';
 
 class Register extends Component {
 
@@ -14,11 +15,17 @@ class Register extends Component {
       firstname:'',
       lastname:'',
       password: '',
-      confirmedPassword:''
+      confirmedPassword:'',
+      alertVisible: !!props.location.state,
+      flashTimer: 5000,
+      flashStatus: props.location.state ? props.location.state.flashStatus : 'danger',
+      flashMessage: props.location.state ? props.location.state.flashMessage : ''
     };
 
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.displayAlert = this.displayAlert.bind(this);
+    this.handleAlertDismiss = this.handleAlertDismiss.bind(this);
   }
 
   onChange(e) {
@@ -58,28 +65,86 @@ class Register extends Component {
           "password": password,
 
         })
+
       }).then((data) => data.json()).then((data) => {
 
           if (data.status === "success") {
 
             this.props.router.replace({ pathname: '/login', state: { flashStatus: "success", flashMessage: "You successfully registered, you can now login!" } });
 
+          } else if (data.status === "error") {
+
+            this.displayAlert(
+
+              data.message,
+              'danger',
+              10000
+
+            );
+
           }
 
       }).catch((err) => {
 
-        console.log(err)
+        this.displayAlert(
+
+          (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+          'danger',
+          10000
+
+        );
 
       });
+
+    } else {
+
+      this.displayAlert(
+
+        'Passwords don\'t match',
+        'danger',
+        3000
+
+      );
 
     }
   }
 
+
+  handleAlertDismiss() {
+    this.setState({
+      alertVisible: false
+    });
+  }
+
+
+  displayAlert(message = '', status = 'info', timer = 5000) {
+
+    this.setState({
+
+      alertVisible: true,
+      flashMessage: message,
+      flashStatus: status,
+      flashTimer: timer
+
+    });
+
+  }
+
+
   render() {
-    const { login, firstname, lastname, email, password, confirmedPassword } = this.state;
+
+    const { login, firstname, lastname, email, password, confirmedPassword, alertVisible, flashTimer, flashStatus, flashMessage } = this.state;
 
     return (
-      <div>
+      <div style={{position: 'relative'}}>
+
+        <Alert
+          visible={alertVisible}
+          message={flashMessage}
+          status={flashStatus}
+          dismissTimer={flashTimer}
+          onDismiss={this.handleAlertDismiss}
+        />
 
         <Nav location={this.props.location} router={this.props.router} />
 

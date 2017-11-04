@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
+import Textarea from 'react-textarea-autosize';
 
 export default class Comment extends Component {
 
@@ -14,17 +14,18 @@ export default class Comment extends Component {
       comment: this.props.comment || {},
       content: this.props.comment ? this.props.comment.content : '',
       isLike: false,
-      likeId: null,
+      likeId: null
 
     };
 
-    this.onDelete = this.onDelete.bind(this);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.toggleEdit = this.toggleEdit.bind(this);
 
     this.onLike = this.onLike.bind(this);
+    this.onDelete = this.onDelete.bind(this);
+    this.onSubmit = this.onSubmit.bind(this);
     this.onDislike = this.onDislike.bind(this);
+    this.toggleEdit = this.toggleEdit.bind(this);
     this.getListLikes = this.getListLikes.bind(this);
+    this.moveCaretAtEnd = this.moveCaretAtEnd.bind(this);
 
   }
 
@@ -72,12 +73,18 @@ export default class Comment extends Component {
       if (data.status === "success") {
 
         this.toggleEdit();
-        //this.props.onModify();
+        this.props.onModify();
 
       }
 
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
 
   }
@@ -105,13 +112,17 @@ export default class Comment extends Component {
 
         if (data.status === "success") {
 
-          window.location.reload();
-          // TODO Remplacer reload par un appel au serveur du parent et remplacer la liste des commentaires
-          //this.props.onModify();
+          this.props.onModify();
 
         }
       }).catch((err) => {
-        console.log(err)
+        this.props.displayAlert(
+
+          (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+          'danger',
+          10000
+
+        );
       });
 
     }
@@ -124,6 +135,19 @@ export default class Comment extends Component {
     this.setState({
 
       editing: !this.state.editing
+
+    }, () => {
+
+      if (this.state.editing) {
+
+        this.textarea.focus();
+        this.setState({
+
+          content: this.state.content
+
+        })
+
+      }
 
     });
 
@@ -152,7 +176,6 @@ export default class Comment extends Component {
 
         for (let i = 0; i < listLikes.length; i++) {
           if (listLikes[i].user.id === sessionStorage.getItem("userId")) {
-            console.log(listLikes[i].user.id + " " + sessionStorage.getItem("userId"))
 
             this.setState({
 
@@ -165,7 +188,13 @@ export default class Comment extends Component {
       }
 
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     })
 
   }
@@ -191,8 +220,6 @@ export default class Comment extends Component {
       return data.json()
     }).then((data) => {
 
-      console.log(data)
-
       if (data.status === "success") {
 
         this.setState({ isLike: true, likeId: data.comment_like_id });
@@ -200,7 +227,13 @@ export default class Comment extends Component {
       }
 
     }).catch((err) => {
-      console.log(err)
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
     });
 
   }
@@ -208,37 +241,38 @@ export default class Comment extends Component {
 
   onDislike(likeId) {
 
-    if (!likeId) {
+    if (likeId) {
 
-      console.log("Pas de likeId");
-      return ;
+      fetch("http://localhost:3001/likeComments/" + likeId, {
+
+        method: 'DELETE',
+
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+        }
+      }).then((data) => {
+        return data.json()
+      }).then((data) => {
+
+        if (data.status === "success") {
+
+          this.setState({isLike: false, likeId: null});
+
+        }
+
+      }).catch((err) => {
+        this.props.displayAlert(
+
+          (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+          'danger',
+          10000
+
+        );
+      });
 
     }
-
-    fetch("http://localhost:3001/likeComments/" + likeId, {
-
-      method: 'DELETE',
-
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
-      }
-    }).then((data) => {
-      return data.json()
-    }).then((data) => {
-
-      console.log(data)
-
-      if (data.status === "success") {
-
-        this.setState({ isLike: false, likeId: null });
-
-      }
-
-    }).catch((err) => {
-      console.log(err)
-    });
 
   }
 
@@ -249,13 +283,20 @@ export default class Comment extends Component {
   }
 
 
+  moveCaretAtEnd(e) {
+    let temp_value = e.target.value;
+    e.target.value = '';
+    e.target.value = temp_value
+  }
+
+
   render() {
 
     const { comment, editing, content, isLike, likeId } = this.state;
 
     return (
 
-      <li className="list-group-item">
+      <li className="list-group-item" style={styles.container}>
 
         <div>
 
@@ -279,13 +320,15 @@ export default class Comment extends Component {
 
                 <div>
 
-                  <textarea
+                  <Textarea
 
                     id="content"
                     name="content"
                     value={content}
+                    inputRef={textarea => this.textarea = textarea}
                     className="col-lg-8"
                     style={styles.textArea}
+                    onFocus={this.moveCaretAtEnd}
                     placeholder="Write a comment"
 
                     onChange={this.onChange.bind(this)}
@@ -330,19 +373,27 @@ export default class Comment extends Component {
 
                 <div>
 
-                  <button
+                  {
+                    (comment && comment.user && comment.user.id === sessionStorage.getItem("userId")) ?
 
-                    type="button"
-                    style={styles.editButton}
-                    className="btn btn-default"
+                      <button
 
-                    onClick={this.toggleEdit}
+                        type="button"
+                        style={styles.editButton}
+                        className="btn btn-default"
 
-                  >
+                        onClick={this.toggleEdit}
 
-                    <i className="material-icons">mode_edit</i>
+                      >
 
-                  </button>
+                        <i className="material-icons">mode_edit</i>
+
+                      </button>
+
+                  :
+
+                    <span/>
+                  }
 
                   <p style={styles.paragraph}>{ content }</p>
 
@@ -397,6 +448,14 @@ const styles = {
 
   },
 
+  container: {
+
+    borderLeft: "none",
+    borderRadius: 0,
+    borderRight: "none",
+
+  },
+
   editButton: {
 
     position: 'absolute',
@@ -444,5 +503,7 @@ const styles = {
 Comment.propTypes = {
 
   comment: PropTypes.object.isRequired,
+
+  displayAlert: PropTypes.func.isRequired
 
 };

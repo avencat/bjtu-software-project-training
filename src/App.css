@@ -65,7 +65,7 @@
 }
 
 div.alert.alert-dismissible.fade.show.in {
-  z-index: 200000;
+  z-index: 1000;
 }
 
 @keyframes App-logo-spin {

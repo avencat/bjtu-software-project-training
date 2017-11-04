@@ -11,23 +11,20 @@ class Login extends Component {
     this.state = {
       login: '',
       password: '',
-      alertVisible: true
+      alertVisible: !!props.location.state,
+      flashTimer: 5000,
+      flashStatus: props.location.state ? props.location.state.flashStatus : 'danger',
+      flashMessage: props.location.state ? props.location.state.flashMessage : ''
     };
 
-    this.flashStatus = null;
-    this.flashMessage = null;
-
-    if (props.location.state) {
-
-      this.flashStatus = props.location.state.flashStatus;
-      this.flashMessage = props.location.state.flashMessage;
-
-    }
 
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.displayAlert = this.displayAlert.bind(this);
     this.handleAlertDismiss = this.handleAlertDismiss.bind(this);
+
   }
+
 
   onChange(e) {
     // Because we named the inputs to match their corresponding values in state, it's
@@ -36,6 +33,7 @@ class Login extends Component {
     state[e.target.name] = e.target.value;
     this.setState(state);
   }
+
 
   onSubmit(e) {
     e.preventDefault();
@@ -63,10 +61,19 @@ class Login extends Component {
         this.props.router.replace({ pathname: '/', state: { flashStatus: "success", flashMessage: "Welcome!" } });
       }
     }).catch((err) => {
-      console.log(err)
+
+      this.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
+
     });
 
   }
+
 
   handleAlertDismiss() {
     this.setState({
@@ -74,26 +81,33 @@ class Login extends Component {
     });
   }
 
+
+  displayAlert(message = '', status = 'info', timer = 5000) {
+
+    this.setState({
+
+      alertVisible: true,
+      flashMessage: message,
+      flashStatus: status,
+      flashTimer: timer
+
+    });
+
+  }
+
+
   render() {
-    const { login, password} = this.state;
+    const { login, password, flashMessage, alertVisible, flashStatus, flashTimer } = this.state;
     return (
       <div style={{position: 'relative'}}>
 
-        {
-          this.flashMessage && this.flashStatus ?
-
-            <Alert
-              visible={this.state.alertVisible}
-              message={this.flashMessage}
-              status={this.flashStatus}
-              dismissTimer={6000}
-              onDismiss={this.handleAlertDismiss}
-            />
-
-          :
-
-            <div/>
-        }
+        <Alert
+          visible={alertVisible}
+          message={flashMessage}
+          status={flashStatus}
+          dismissTimer={flashTimer}
+          onDismiss={this.handleAlertDismiss}
+        />
 
         <Nav location={this.props.location} router={this.props.router} />
 

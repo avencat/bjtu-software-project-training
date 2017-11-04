@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import Nav from '../components/Navbar';
 import Alert from '../components/Alert';
 import Post from '../components/Post';
+import PostModal from '../components/PostModal';
+import CommentModal from '../components/CommentModal';
 
 
 export default class Profile extends Component {
@@ -14,6 +16,8 @@ export default class Profile extends Component {
       posts: [],
       putPost: '',
       listPosts: [],
+      modalPost: { id: 0, content: '' },
+      modalComments: { id: 0, content: '', user: {} },
       user: sessionStorage.getItem("userId"),
       flashStatus: '',
       flashTimer: 3000,
@@ -24,7 +28,10 @@ export default class Profile extends Component {
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.fetchPosts = this.fetchPosts.bind(this);
+    this.displayAlert = this.displayAlert.bind(this);
+    this.setModalPostContent = this.setModalPostContent.bind(this);
     this.handleHideFlashMessage = this.handleHideFlashMessage.bind(this);
+    this.setModalCommentsContent = this.setModalCommentsContent.bind(this);
   }
 
 
@@ -52,7 +59,9 @@ export default class Profile extends Component {
 
     if (this.state.user) {
 
-      fetch("http://localhost:3001/posts?user_id=" + sessionStorage.getItem("userId"), {
+      const url = "http://localhost:3001/posts" + (this.props.location.query && this.props.location.query.all === "true" ? '' : ("?user_id=" + sessionStorage.getItem('userId')));
+
+      fetch(url, {
 
         method: 'GET',
 
@@ -67,20 +76,40 @@ export default class Profile extends Component {
 
         if (data.status === "success") {
 
-          console.log(data)
+          const listPosts = data.data.map((onePost) => {
 
-          const listPosts = data.data.map((onePost) =>
-            <Post post={onePost} key={onePost.id} fetchPosts={this.fetchPosts}/>
-          );
+            if (onePost.id === this.state.modalPost.id) {
+
+              this.setState({modalPost: onePost});
+
+            }
+
+            return (<Post post={onePost} key={onePost.id} setModalPost={this.setModalPostContent} setModalComment={this.setModalCommentsContent} displayAlert={this.displayAlert}/>);
+          });
 
           this.setState({
             posts: data.data,
-            listPosts
+            listPosts : []
+          }, () => {
+
+            this.setState({
+              listPosts
+            })
+
           });
 
         }
       }).catch((err) => {
-        console.log(err)
+
+        this.setState({
+
+          flashStatus: 'danger',
+          flashMessage: "Couldn't get posts, please try again later. If the error persists, please contact us at social@network.net",
+          flashTimer: 10000,
+          showFlashMessage: true
+
+        });
+
       });
 
     }
@@ -126,9 +155,12 @@ export default class Profile extends Component {
 
           flashStatus: 'success',
           flashMessage: 'Successfully posted',
-          showFlashMessage: true
+          showFlashMessage: true,
+          post: ''
 
         });
+
+        this.fetchPosts();
 
       }
 
@@ -136,25 +168,48 @@ export default class Profile extends Component {
 
       this.setState({
 
-        flashStatus: 'error',
+        flashStatus: 'danger',
         flashMessage: err.message || "Couldn't post, please try again later.",
         showFlashMessage: true
 
       });
 
-      console.log(err)
+    });
+
+  }
+
+
+  displayAlert(message = '', status = 'info', timer = 5000) {
+
+    this.setState({
+
+      showFlashMessage: true,
+      flashMessage: message,
+      flashStatus: status,
+      flashTimer: timer
 
     });
+
   }
+
+
+  setModalPostContent(modalPost) {
+
+    this.setState({modalPost})
+
+  }
+
+
+  setModalCommentsContent(modalComments) {
+
+    this.setState({modalComments});
+
+  }
+
 
   render() {
 
-    const { post, listPosts, user, showFlashMessage, flashMessage, flashStatus, flashTimer } = this.state;
-
-    var tmp = {
-      alignItems: "center",
-      display: "flex"
-    };
+    const { post, listPosts, user, showFlashMessage, flashMessage, flashStatus, flashTimer, modalPost, modalComments } = this.state;
 
     return (
       <div style={{position: 'relative'}}>
@@ -178,39 +233,70 @@ export default class Profile extends Component {
             {
               user ?
 
-                <form onSubmit={this.onSubmit}>
+                <span>
+                  <form onSubmit={this.onSubmit}>
 
-                  <div className="form-group" style={tmp}>
+                    <div className="form-group" style={styles.postPostContainer}>
 
-                    <div className="col-lg-10">
-                      <input placeholder="What's new?" required={true} className="form-control" value={post} name='post' id="post" onChange={this.onChange}/>
+                      <div className="col-lg-10">
+                        <input placeholder="What's new?" required={true} className="form-control" value={post} name='post' id="post" onChange={this.onChange}/>
+                      </div>
+
+                      <div className="col-lg-1">
+                        <input className="btn btn-lg btn-primary" type="submit" value="Submit"/>
+                      </div>
+
                     </div>
 
-                    <div className="col-lg-1">
-                      <input className="btn btn-lg btn-primary" type="submit" value="Submit"/>
-                    </div>
+                  </form>
 
+                  <div>
+                    <ul className="list-group">
+                      {listPosts}
+                    </ul>
                   </div>
 
-                </form>
+                </span>
 
               :
 
                 <div/>
             }
 
-            <div>
-              <ul className="list-group">
-                {listPosts}
-              </ul>
-
-            </div>
-
           </div>
 
         </div>
+
+        <PostModal
+          id={modalPost.id}
+          post={modalPost.content}
+
+          onModify={this.fetchPosts}
+          displayAlert={this.displayAlert}
+        />
+
+        <CommentModal
+          id={modalComments.id}
+          post={modalComments.content}
+          login={(modalComments.user.firstname && modalComments.user.lastname) ? '' + modalComments.user.firstname + ' ' + modalComments.user.lastname : '' + modalComments.user.login}
+
+          onModify={this.fetchPosts}
+          displayAlert={this.displayAlert}
+        />
 
       </div>
     );
   }
 }
+
+
+const styles = {
+
+  postPostContainer: {
+
+    alignItems: "center",
+    display: "flex"
+
+  }
+
+};

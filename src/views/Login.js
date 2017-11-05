@@ -124,7 +124,8 @@ class Login extends Component {
 
         <Nav location={this.props.location} router={this.props.router} />
 
-        <div className="col-sm-12">
+        <span className='col-sm-3'/>
+        <div className="col-sm-6">
 
           <div className="jumbotron text-center">
 
@@ -133,27 +134,27 @@ class Login extends Component {
             <form className="form-horizontal" onSubmit={this.onSubmit}>
 
               <div className="form-group">
-                <span className="col-sm-3"/>
+                <span className="col-sm-1"/>
 
-                <label className="control-label col-sm-2" htmlFor="login">Username :</label>
+                <label className="control-label col-sm-4" htmlFor="login">Username :</label>
 
-                <div className="col-sm-4">
+                <div className="col-sm-6">
                   <input className="form-control" required={true} type="text" id="login" value={login} name='login' onChange={this.onChange} />
                 </div>
 
-                <span className="col-sm-3"/>
+                <span className="col-sm-1"/>
               </div>
 
               <div className="form-group">
-                <span className="col-sm-3"/>
+                <span className="col-sm-1"/>
 
-                <label className="control-label col-sm-2" htmlFor="password">Password :</label>
+                <label className="control-label col-sm-4" htmlFor="password">Password :</label>
 
-                <div className="col-sm-4">
+                <div className="col-sm-6">
                   <input className="form-control" required={true} type="password" id="password" value={password} name='password' onChange={this.onChange} />
                 </div>
 
-                <span className="col-sm-3"/>
+                <span className="col-sm-1"/>
               </div>
 
               <div>
@@ -165,6 +166,7 @@ class Login extends Component {
           </div>
 
         </div>
+        <span className='col-sm-3'/>
 
       </div>
     );

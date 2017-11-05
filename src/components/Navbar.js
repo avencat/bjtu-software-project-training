@@ -78,22 +78,13 @@ export default class Navbar extends Component {
 
   render() {
 
-
-    let styleNavBar = {
-      backgroundColor: "#3798ce"
-    };
-
-    let styleNavBarText = {
-      color: "#ffffff"
-    };
-
     return (
 
-      <nav className="navbar navbar-default" style={styleNavBar}>
+      <nav className="navbar navbar-default" style={styles.styleNavBar}>
         <div className="navbar-header">
 
           <Link className="navbar-brand" to="/">
-            <span style={styleNavBarText}>Home</span>
+            <span style={styles.styleNavBarText}>Home</span>
           </Link>
 
           {
@@ -103,7 +94,7 @@ export default class Navbar extends Component {
 
                 <li>
                   <Link to="/profile">
-                    <span style={styleNavBarText}>Profile</span>
+                    <span style={styles.styleNavBarText}>Profile</span>
                   </Link>
                 </li>
 
@@ -127,6 +118,25 @@ export default class Navbar extends Component {
 
 
 const styles = {
+
+  styleNavBar: {
+
+    backgroundColor: "#3798ce",
+    borderRadius: 0,
+    left: 0,
+    margin: -1,
+    position: 'fixed',
+    right: 0,
+    top: 0,
+    zIndex: 2,
+
+  },
+
+  styleNavBarText: {
+
+    color: "#ffffff"
+
+  },
 
   whiteLink: {
 

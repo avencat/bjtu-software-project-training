@@ -68,6 +68,10 @@ div.alert.alert-dismissible.fade.show.in {
   z-index: 1000;
 }
 
+.jumbotron {
+  margin-top: 100px;
+}
+
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

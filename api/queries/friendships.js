@@ -129,7 +129,7 @@ function getFriendships(req, res, next) {
         .json({
           status: 'success',
           data,
-          message: 'Retrieved posts'
+          message: 'Retrieved friendships'
         });
 
     })

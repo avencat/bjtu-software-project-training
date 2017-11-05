@@ -179,7 +179,7 @@ function getComments(req, res, next) {
       'users.login, users.firstname, users.lastname ' +
       'FROM comments INNER JOIN users ON comments.author_id = users.id ' +
       'WHERE comments.post_id = $1 ' +
-      'ORDER BY comments.created DESC',
+      'ORDER BY comments.created ASC',
       post_id)
 
       .then((data) => {

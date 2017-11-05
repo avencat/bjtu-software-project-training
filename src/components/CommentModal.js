@@ -56,6 +56,16 @@ export default class CommentModal extends Component {
           newComment: ''
         });
 
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
 
     }).catch((err) => {
@@ -107,6 +117,16 @@ export default class CommentModal extends Component {
         this.setState({
           listComment
         });
+
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
 
       }
     }).catch((err) => {

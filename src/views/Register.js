@@ -82,6 +82,16 @@ class Register extends Component {
 
             );
 
+          } else {
+
+            this.displayAlert(
+
+              data.message,
+              'danger',
+              10000
+
+            );
+
           }
 
       }).catch((err) => {

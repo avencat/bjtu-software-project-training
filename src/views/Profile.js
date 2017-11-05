@@ -37,9 +37,23 @@ export default class Profile extends Component {
     }).then((data) => {
       return data.json()
     }).then((data) => {
+
       if (data.status === "success") {
+
         this.setState(data.user);
+
+      } else {
+
+        this.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
+
     }).catch((err) => {
       this.displayAlert(
 
@@ -99,6 +113,16 @@ export default class Profile extends Component {
             showFlashMessage: true
 
           });
+
+        } else {
+
+          this.displayAlert(
+
+            data.message,
+            'danger',
+            10000
+
+          );
 
         }
 

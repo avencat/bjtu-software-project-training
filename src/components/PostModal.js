@@ -74,6 +74,16 @@ export default class PostModal extends Component {
           5000
         );
 
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
     }).catch((err) => {
       this.props.displayAlert(
@@ -113,6 +123,16 @@ export default class PostModal extends Component {
           "Post " + this.props.id + " successfully removed",
           "success",
           5000
+        );
+
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
         );
 
       }

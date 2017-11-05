@@ -98,6 +98,16 @@ export default class Profile extends Component {
 
           });
 
+        } else {
+
+          this.displayAlert(
+
+            data.message,
+            'danger',
+            10000
+
+          );
+
         }
       }).catch((err) => {
 
@@ -161,6 +171,16 @@ export default class Profile extends Component {
         });
 
         this.fetchPosts();
+
+      } else {
+
+        this.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
 
       }
 

@@ -75,6 +75,16 @@ export default class Comment extends Component {
         this.toggleEdit();
         this.props.onModify();
 
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
 
     }).catch((err) => {
@@ -113,6 +123,16 @@ export default class Comment extends Component {
         if (data.status === "success") {
 
           this.props.onModify();
+
+        } else {
+
+          this.props.displayAlert(
+
+            data.message,
+            'danger',
+            10000
+
+          );
 
         }
       }).catch((err) => {
@@ -185,6 +205,16 @@ export default class Comment extends Component {
             });
           }
         }
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
 
     }).catch((err) => {
@@ -224,6 +254,16 @@ export default class Comment extends Component {
 
         this.setState({ isLike: true, likeId: data.comment_like_id });
 
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
 
     }).catch((err) => {
@@ -259,6 +299,16 @@ export default class Comment extends Component {
         if (data.status === "success") {
 
           this.setState({isLike: false, likeId: null});
+
+        } else {
+
+          this.props.displayAlert(
+
+            data.message,
+            'danger',
+            10000
+
+          );
 
         }
 

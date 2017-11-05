@@ -58,8 +58,21 @@ class Login extends Component {
       sessionStorage.setItem("userId", data.user_id);
 
       if (data.status === "success") {
+
         this.props.router.replace({ pathname: '/', state: { flashStatus: "success", flashMessage: "Welcome!" } });
+
+      } else {
+
+        this.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
+
     }).catch((err) => {
 
       this.displayAlert(

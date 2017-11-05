@@ -62,6 +62,16 @@ export default class Post extends Component {
             });
           }
         }
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
 
     }).catch((err) => {
@@ -103,6 +113,16 @@ export default class Post extends Component {
 
         this.setState({ isLike: true, likeId: data.like_id });
 
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
       }
 
     }).catch((err) => {
@@ -138,6 +158,16 @@ export default class Post extends Component {
         if (data.status === "success") {
 
           this.setState({isLike: false, likeId: null});
+
+        } else {
+
+          this.props.displayAlert(
+
+            data.message,
+            'danger',
+            10000
+
+          );
 
         }
 

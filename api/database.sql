@@ -20,7 +20,7 @@ CREATE TABLE      users (
 
 CREATE INDEX      fullname ON users (firstname, lastname);
 
-CREATE TABLE      friendship (
+CREATE TABLE      friendships (
   id              SERIAL PRIMARY KEY,
   follower_id     BIGINT NOT NULL,
   following_id    BIGINT NOT NULL,

@@ -39,6 +39,20 @@ CREATE TABLE      post_likes (
   FOREIGN KEY     (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
+DROP TABLE friendship;
+
+CREATE TABLE      friendships (
+  id              SERIAL PRIMARY KEY,
+  follower_id     BIGINT NOT NULL,
+  following_id    BIGINT NOT NULL,
+  following_date  TIMESTAMPTZ,
+  created         TIMESTAMPTZ,
+  updated         TIMESTAMPTZ,
+  FOREIGN KEY     (follower_id)   REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY     (following_id)  REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE          (follower_id, following_id)
+);
+
 DROP TRIGGER trigger_manage_comments_nb ON comments;
 DROP TRIGGER trigger_manage_posts ON posts;
 DROP FUNCTION manage_comments_nb();

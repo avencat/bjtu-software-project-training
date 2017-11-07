@@ -7,11 +7,24 @@ let db = require('../queries/friendships');
 /**
  * @api {get} /friendships Request Friendships of the current logged in user list.
  * @apiName GetFrienships
- * @apiGroup Get
+ * @apiGroup Friendship
  *
  * @apiParam {Number} following_id   [Optional] Followed User unique ID (Primary key).
  *
- * @apiExample {js} Fetch example:
+ * @apiExample {js} Fetch example 1:
+ *   fetch("http://localhost:3001/friendships", {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ * @apiExample {js} Fetch example 2:
  *   fetch("http://localhost:3001/friendships?following_id=" + some_user_id, {
  *
  *      method: 'GET',
@@ -61,6 +74,7 @@ let db = require('../queries/friendships');
  *       ],
  *       "message": "Retrieved posts"
  *     }
+ *
  *
  * @apiError PostNotFound The id of the Post was not found.
  *

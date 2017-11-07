@@ -1,5 +1,6 @@
 let bcrypt = require('bcryptjs');
 let jwt = require('jsonwebtoken');
+let format = require('pg-format');
 let { db } = require('../database');
 
 let jwtSecretOrKey = '25015c61-030e-452f-a92f-5b8cdb0b627e';
@@ -179,7 +180,15 @@ function getSingleUser(req, res, next) {
 
 function getUsers(req, res, next) {
 
-  db.any('SELECT id, firstname, lastname FROM users')
+  let query = 'SELECT id, firstname, lastname, login FROM users';
+
+  if (req.query.q) {
+
+    query = format(query + ' WHERE users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L', '%' + req.query.q + '%');
+
+  }
+
+  db.any(query)
 
     .then(function (data) {
 
@@ -187,7 +196,7 @@ function getUsers(req, res, next) {
         .json({
           status: 'success',
           data: data,
-          message: 'Retrieved ALL users'
+          message: 'Retrieved users'
         });
 
     })

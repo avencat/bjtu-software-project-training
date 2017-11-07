@@ -1,4 +1,5 @@
 let { db } = require('../database');
+let format = require('pg-format');
 
 
 function createFriendship(req, res, next) {
@@ -107,12 +108,20 @@ function findFriendshipById(id, cb) {
 
 function getFriendships(req, res, next) {
 
-  let request = 'SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, ' +
+  let request = format('SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, ' +
     'users.login, users.firstname, users.lastname ' +
     'FROM friendships INNER JOIN users ON friendships.following = users.id ' +
-    'WHERE friendships.follower_id = $1';
+    'WHERE friendships.follower_id = %L', req.user.id);
 
-  db.any(request + ' ORDER BY friendships.id DESC, friendships.following_date DESC', req.user.id)
+  if (req.query.following_id) {
+
+    request = format(request + ' AND friendships.following_id = %L', req.query.following_id)
+
+  }
+
+  request += ' ORDER BY friendships.id DESC, friendships.following_date DESC';
+
+  db.any(request)
 
     .then((data) => {
 

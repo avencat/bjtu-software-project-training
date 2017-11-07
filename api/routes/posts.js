@@ -304,7 +304,6 @@ router.put('/:id', passport.authenticate('jwt', { session: false }), db.updatePo
  * @apiName DeletePost
  * @apiGroup Post
  *
- * @apiParam {String} content      Mandatory Content of the Post.
  * @apiParam {Number} id           Post unique ID (Primary key).
  *
  * @apiExample {js} Fetch example:

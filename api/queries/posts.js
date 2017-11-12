@@ -7,10 +7,9 @@ function createPost(req, res, next) {
 
   const now = new Date();
 
-  body = {
+  let body = {
     content: req.body.content ? req.body.content : null,
-    author_id: req.user.id,
-    created: now
+    author_id: req.user.id
   };
 
   if (!body.content) {
@@ -23,10 +22,10 @@ function createPost(req, res, next) {
 
   } else {
 
-    db.oneOrNone('INSERT INTO posts(author_id, content, comments_nb, likes_nb, created, updated) ' +
-      'VALUES(${author_id}, ${content}, 0, 0, ${created}, ${created}) ' +
+    db.oneOrNone(format('INSERT INTO posts(author_id, content, comments_nb, likes_nb, created, updated) ' +
+      'VALUES(%1$L, %2$L, 0, 0, %3$L, %3$L) ' +
       'RETURNING posts.id AS post_id',
-      body)
+      body.author_id, body.content, now))
       .then((response) => {
 
         res.status(201)
@@ -69,7 +68,7 @@ function deletePost(req, res, next) {
 
     } else {
 
-      db.result('DELETE FROM posts WHERE id = $1', post_id)
+      db.result(format('DELETE FROM posts WHERE id = %L', post_id))
         .then(function (result) {
 
           /* jshint ignore:start */
@@ -97,7 +96,7 @@ function deletePost(req, res, next) {
 
 function findPostById(id, cb) {
 
-  db.oneOrNone('SELECT * FROM posts WHERE id = $1', id)
+  db.oneOrNone(format('SELECT * FROM posts WHERE id = %L', id))
 
     .then((data) => {
 
@@ -116,12 +115,12 @@ function getAllCommentsForPost(id) {
 
   id = parseInt(id);
 
-  return(db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
+  return(db.any(format('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
     'users.login, users.firstname, users.lastname ' +
     'FROM comments INNER JOIN users ON comments.author_id = users.id ' +
-    'WHERE comments.post_id = $1 ' +
+    'WHERE comments.post_id = %L ' +
     'ORDER BY comments.created ASC',
-    id)
+    id))
     .then(data => {
 
       if (Array.isArray(data)) {
@@ -139,19 +138,19 @@ function getAllCommentsForPost(id) {
 
 function getAllPostsWithComments(req, res, next) {
 
-  let request = 'SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
+  let request = format('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
     'users.login, users.firstname, users.lastname ' +
-    'FROM posts INNER JOIN users ON posts.author_id = users.id';
+    'FROM posts INNER JOIN users ON posts.author_id = users.id');
 
   if (req.query.author_id || req.query.user_id) {
 
-    request += ' WHERE posts.author_id = $1';
+    const user_id = parseInt(req.query.author_id || req.query.user_id);
+
+    request = format(request + ' WHERE posts.author_id = %L', user_id);
 
   }
 
-  const user_id = parseInt(req.query.author_id || req.query.user_id);
-
-  db.any(request + ' ORDER BY posts.id DESC, posts.created DESC', user_id)
+  db.any(format(request + ' ORDER BY posts.id DESC, posts.created DESC'))
 
     .then((data) => {
 
@@ -295,12 +294,12 @@ function getSinglePost(req, res, next) {
 
   const post_id = parseInt(req.params.id);
 
-  db.one('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
+  db.one(format('SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
     'users.login, users.firstname, users.lastname ' +
     'FROM posts INNER JOIN users ON posts.author_id = users.id ' +
-    'WHERE posts.id = $1 ' +
+    'WHERE posts.id = %L ' +
     'ORDER BY posts.id DESC, posts.created DESC',
-    post_id)
+    post_id))
 
     .then((data) => serializePost(data))
     .then((data) => {
@@ -350,8 +349,8 @@ function updatePost(req, res, next) {
 
     } else {
 
-      db.none('UPDATE posts SET content=COALESCE($1, content), updated=$2 WHERE id=$3',
-        [req.body.content ? req.body.content : null, now, post_id])
+      db.none(format('UPDATE posts SET content=COALESCE(%1$L, content), updated=%2$L WHERE id=%3$L',
+        (req.body.content ? req.body.content : null), now, post_id))
         .then(() => {
 
           res.status(200)

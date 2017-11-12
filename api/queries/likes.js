@@ -1,14 +1,14 @@
 let { db } = require('../database');
+import format from 'pg-format';
 
 
 function createLike(req, res, next) {
 
   const now = new Date();
 
-  body = {
+  let body = {
     post_id: req.body.post_id,
-    user_id: req.user.id,
-    created: now
+    user_id: req.user.id
   };
 
 
@@ -22,10 +22,10 @@ function createLike(req, res, next) {
 
   } else {
 
-    db.one('INSERT into post_likes(user_id, post_id, created, updated) ' +
-      'values(${user_id}, ${post_id}, ${created}, ${created}) ' +
+    db.one(format('INSERT into post_likes(user_id, post_id, created, updated) ' +
+      'values(%1$L, %2$L, %3$L, %3$L) ' +
       'RETURNING post_likes.id AS like_id',
-      body)
+      body.user_id, body.post_id, now))
       .then((response) => {
 
         res.status(201)
@@ -68,7 +68,7 @@ function deleteLike(req, res, next) {
 
     } else {
 
-      db.result('DELETE FROM post_likes WHERE id = $1', like_id)
+      db.result(format('DELETE FROM post_likes WHERE id = %L', like_id))
         .then(function (result) {
 
           /* jshint ignore:start */
@@ -96,7 +96,7 @@ function deleteLike(req, res, next) {
 
 function findLikeById(id, cb) {
 
-  db.oneOrNone('SELECT * FROM post_likes WHERE id = $1', id)
+  db.oneOrNone(format('SELECT * FROM post_likes WHERE id = %L', id))
 
     .then((data) => {
 
@@ -117,11 +117,11 @@ function getLikes(req, res, next) {
 
     const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT post_likes.id, post_likes.user_id, post_likes.post_id, post_likes.created, post_likes.updated, ' +
+    db.any(format('SELECT post_likes.id, post_likes.user_id, post_likes.post_id, post_likes.created, post_likes.updated, ' +
       'users.login, users.firstname, users.lastname ' +
       'FROM post_likes INNER JOIN users ON post_likes.user_id = users.id ' +
-      'WHERE post_likes.post_id = $1',
-      post_id)
+      'WHERE post_likes.post_id = %L',
+      post_id))
 
       .then((data) => {
 

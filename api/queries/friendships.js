@@ -25,10 +25,10 @@ function createFriendship(req, res, next) {
 
   } else {
 
-    db.one('INSERT into friendships(following_id, follower_id, following_date, created, updated) ' +
-      'values(${following_id}, ${follower_id}, ${following_date}, ${created}, ${created}) ' +
+    db.one(format('INSERT into friendships(following_id, follower_id, following_date, created, updated) ' +
+      'values(%1$L, %2$L, %3$L, %4$L, %4$L) ' +
       'RETURNING friendships.id AS friendship_id',
-      body)
+      body.following_id, body.follower_id, body.following_date, body.created))
       .then((response) => {
 
         res.status(201)
@@ -70,7 +70,7 @@ function deleteFriendship(req, res, next) {
 
     } else {
 
-      db.result('DELETE FROM friendships WHERE id = $1', friendship_id)
+      db.result(format('DELETE FROM friendships WHERE id = %L', friendship_id))
         .then(function (result) {
           /* jshint ignore:start */
           res.status(200)
@@ -91,7 +91,7 @@ function deleteFriendship(req, res, next) {
 
 function findFriendshipById(id, cb) {
 
-  db.oneOrNone('SELECT * FROM friendships WHERE id = $1', id)
+  db.oneOrNone(format('SELECT * FROM friendships WHERE id = %L', id))
 
     .then((data) => {
 
@@ -119,7 +119,7 @@ function getFriendships(req, res, next) {
 
   }
 
-  request += ' ORDER BY friendships.id DESC, friendships.following_date DESC';
+  request = format(request + ' ORDER BY friendships.id DESC, friendships.following_date DESC');
 
   db.any(request)
 

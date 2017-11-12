@@ -1,4 +1,5 @@
 let { db } = require('../database');
+import format from 'pg-format';
 
 
 function createComment(req, res, next) {
@@ -30,10 +31,10 @@ function createComment(req, res, next) {
 
   } else {
 
-    db.one('INSERT into comments(author_id, post_id, content, likes_nb, created, updated)' +
-      'values(${author_id}, ${post_id}, ${content}, 0, ${created}, ${created}) ' +
+    db.one(format('INSERT into comments(author_id, post_id, content, likes_nb, created, updated)' +
+      'values(%1$L, %2$L, %3$L, 0, %4$L, %4$L) ' +
       'RETURNING comments.id AS comment_id',
-      body)
+      body.author_id, body.post_id, body.content, body.created))
       .then((response) => {
 
         res.status(201)
@@ -76,7 +77,7 @@ function deleteComment(req, res, next) {
 
     } else {
 
-      db.result('DELETE FROM comments WHERE id = $1', comment_id)
+      db.result(format('DELETE FROM comments WHERE id = %L', comment_id))
         .then(function (result) {
           /* jshint ignore:start */
           res.status(200)
@@ -98,7 +99,7 @@ function deleteComment(req, res, next) {
 
 function findCommentById(id, cb) {
 
-  db.oneOrNone('SELECT * FROM comments WHERE id = $1', id)
+  db.oneOrNone(format('SELECT * FROM comments WHERE id = %L', id))
 
     .then((data) => {
 
@@ -119,11 +120,11 @@ function getComment(req, res, next) {
 
   if (comment_id) {
 
-    db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
+    db.any(format('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
       'users.login, users.firstname, users.lastname ' +
       'FROM comments INNER JOIN users ON comments.author_id = users.id ' +
-      'WHERE comments.id = $1',
-      comment_id)
+      'WHERE comments.id = %L',
+      comment_id))
 
       .then((data) => {
 
@@ -175,12 +176,12 @@ function getComments(req, res, next) {
 
     const post_id = parseInt(req.query.post_id);
 
-    db.any('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
+    db.any(format('SELECT comments.id, comments.content, comments.author_id, comments.likes_nb, comments.post_id, comments.created, comments.updated, ' +
       'users.login, users.firstname, users.lastname ' +
       'FROM comments INNER JOIN users ON comments.author_id = users.id ' +
-      'WHERE comments.post_id = $1 ' +
+      'WHERE comments.post_id = %L ' +
       'ORDER BY comments.created ASC',
-      post_id)
+      post_id))
 
       .then((data) => {
 
@@ -264,9 +265,7 @@ function updateComment(req, res, next) {
   const comment_id = parseInt(req.params.id);
   const now = new Date();
 
-  body = {
-    content: req.body.content ? req.body.content : null
-  };
+  let content = req.body.content ? req.body.content : null;
 
   findCommentById(comment_id, (err, comment) => {
 
@@ -282,7 +281,7 @@ function updateComment(req, res, next) {
           message: 'You are not authorized to delete this comment.'
         });
 
-    } else if (!body.content) {
+    } else if (!content) {
 
       res.status(400)
         .json({
@@ -292,8 +291,8 @@ function updateComment(req, res, next) {
 
     } else {
 
-      db.none('UPDATE comments SET content=COALESCE($1, content), updated=$2 WHERE id=$3',
-        [body.content, now, comment_id])
+      db.none(format('UPDATE comments SET content=COALESCE(%1$L, content), updated=%2$L WHERE id=%3$L',
+        content, now, comment_id))
         .then(() => {
 
           res.status(200)

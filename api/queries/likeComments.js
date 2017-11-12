@@ -1,14 +1,14 @@
 let { db } = require('../database');
+import format from 'pg-format';
 
 
 function createLikeComment(req, res, next) {
 
   const now = new Date();
 
-  body = {
+  let body = {
     comment_id: req.body.comment_id,
-    user_id: req.user.id,
-    created: now
+    user_id: req.user.id
   };
 
 
@@ -22,10 +22,10 @@ function createLikeComment(req, res, next) {
 
   } else {
 
-    db.one('INSERT INTO comment_likes(user_id, comment_id, created, updated) ' +
-      'values(${user_id}, ${comment_id}, ${created}, ${created}) ' +
+    db.one(format('INSERT INTO comment_likes(user_id, comment_id, created, updated) ' +
+      'values(%1$L, %2$L, %3$L, %3$L) ' +
       'RETURNING comment_likes.id AS comment_like_id',
-      body)
+      body.user_id, body.comment_id, now))
       .then((response) => {
 
         res.status(201)
@@ -68,7 +68,7 @@ function deleteLikeComment(req, res, next) {
 
     } else {
 
-      db.result('DELETE FROM comment_likes WHERE id = $1', like_id)
+      db.result(format('DELETE FROM comment_likes WHERE id = %L', like_id))
         .then(function (result) {
 
           /* jshint ignore:start */
@@ -96,7 +96,7 @@ function deleteLikeComment(req, res, next) {
 
 function findLikeCommentsById(id, cb) {
 
-  db.oneOrNone('SELECT * FROM comment_likes WHERE id = $1', id)
+  db.oneOrNone(format('SELECT * FROM comment_likes WHERE id = %L', id))
 
     .then((data) => {
 
@@ -117,11 +117,11 @@ function getLikeComments(req, res, next) {
 
     const comment_id = parseInt(req.query.comment_id);
 
-    db.any('SELECT comment_likes.id, comment_likes.user_id, comment_likes.comment_id, comment_likes.created, comment_likes.updated,' +
+    db.any(format('SELECT comment_likes.id, comment_likes.user_id, comment_likes.comment_id, comment_likes.created, comment_likes.updated,' +
       'users.login, users.firstname, users.lastname ' +
       'FROM comment_likes INNER JOIN users ON comment_likes.user_id = users.id ' +
-      'WHERE comment_likes.comment_id = $1',
-      comment_id)
+      'WHERE comment_likes.comment_id = %L',
+      comment_id))
 
       .then((data) => {
 

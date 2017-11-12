@@ -12,8 +12,21 @@ let db = require('../queries/posts');
  *
  * @apiParam {Number} author_id   [Optional] Author unique ID (Primary key).
  *
- * @apiExample {js} Fetch example:
+ * @apiExample {js} Fetch example in order to get posts of a specific user:
  *   fetch("http://localhost:3001/posts?author_id=" + some_user_id, {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ * @apiExample {js} Fetch example in order to get posts of all users I follow and my posts:
+ *   fetch("http://localhost:3001/posts", {
  *
  *      method: 'GET',
  *

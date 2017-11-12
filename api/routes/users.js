@@ -71,13 +71,15 @@ router.delete('/:id', passport.authenticate('jwt', { session: false }), db.delet
  *           "id": 42,
  *           "firstname": "m",
  *           "lastname": "lol",
- *           "login": "aze_90"
+ *           "login": "aze_90",
+ *           "friendship_id": null
  *         },
  *         {
  *           "id": 43,
  *           "firstname": "n",
  *           "lastname": "lal",
- *           "login": "azerty_99"
+ *           "login": "azerty_99",
+ *           "friendship_id": 176,
  *         }
  *       ],
  *       "message": "Retrieved users"

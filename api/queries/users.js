@@ -52,9 +52,9 @@ function createUser(req, res, next) {
 
     body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated)' +
-      'values(${firstname}, ${lastname}, ${birthday}, ${email}, ${login}, ${gender}, ${telephone}, ${password}, ${created}, ${created})',
-      body)
+    db.none(format('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated)' +
+      'values(%1$L, %2$L, %3$L, %4$L, %5$L, %6$L, %7$L, %8$L, %9$L, %9$L)',
+      body.firstname, body.lastname, body.birthday, body.email, body.login, body.gender, body.telephone, body.password, body.created))
       .then(() => {
         res.status(201)
           .json({
@@ -99,7 +99,7 @@ function deleteUser(req, res, next) {
 
   } else {
 
-    db.result('DELETE FROM users WHERE id = $1', user_id)
+    db.result(format('DELETE FROM users WHERE id = %L', user_id))
       .then(function () {
 
         /* jshint ignore:start */
@@ -123,7 +123,7 @@ function deleteUser(req, res, next) {
 
 function findUserById(id, cb) {
 
-  db.oneOrNone('SELECT * FROM users WHERE id = $1', id)
+  db.oneOrNone(format('SELECT * FROM users WHERE id = %L', id))
 
     .then((data) => {
 
@@ -140,7 +140,7 @@ function findUserById(id, cb) {
 
 function findUserByLogin(username, cb) {
 
-  db.oneOrNone('SELECT * FROM users WHERE login = $1', username)
+  db.oneOrNone(format('SELECT * FROM users WHERE login = %L', username))
 
     .then((data) => {
 
@@ -159,16 +159,28 @@ function getSingleUser(req, res, next) {
 
   const userId = req.params.id ? parseInt(req.params.id) : req.user.id;
 
-  db.one('SELECT id, login, firstname, lastname, birthday, email, gender, telephone FROM users WHERE id = $1', userId)
+  db.oneOrNone(format('SELECT id, login, firstname, lastname, birthday, email, gender, telephone FROM users WHERE id = %L', userId))
 
     .then(function (data) {
 
-      res.status(200)
-        .json({
-          status: 'success',
-          user: data,
-          message: 'Retrieved ONE user'
-        });
+      if (data) {
+
+        res.status(200)
+          .json({
+            status: 'success',
+            user: data,
+            message: 'Retrieved ONE user'
+          });
+
+      } else {
+
+        res.status(404)
+          .json({
+            status: 'error',
+            message: 'User not found'
+          })
+
+      }
 
     })
     .catch(function (err) {
@@ -180,11 +192,18 @@ function getSingleUser(req, res, next) {
 
 function getUsers(req, res, next) {
 
-  let query = 'SELECT id, firstname, lastname, login FROM users';
+  let query = format('SELECT users.id, users.firstname, users.lastname, users.login, friendships.id AS friendship_id ' +
+    'FROM users ' +
+    'LEFT JOIN friendships ' +
+    'ON friendships.following_id = users.id AND friendships.follower_id = %1$L ' +
+    'WHERE users.id != %1$L',
+    req.user.id);
 
   if (req.query.q) {
 
-    query = format(query + ' WHERE users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L OR users.email = %2$L', '%' + req.query.q + '%', req.query.q);
+    query = format(query + ' AND users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L OR users.email = %2$L',
+      '%' + req.query.q + '%',
+      req.query.q);
 
   }
 
@@ -201,6 +220,8 @@ function getUsers(req, res, next) {
 
     })
     .catch(function (err) {
+
+      console.log(err);
 
       return next(err);
 
@@ -226,7 +247,7 @@ function login(req, res, next) {
 
       } else if (user && bcrypt.compareSync(req.body.password, user.password)) {
 
-        const payload = {id: user.id};
+        const payload = { id: user.id };
         const token = jwt.sign(payload, jwtSecretOrKey);
         res.json({
           status: "success",

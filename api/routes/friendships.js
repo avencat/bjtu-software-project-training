@@ -11,7 +11,7 @@ let db = require('../queries/friendships');
  *
  * @apiParam {Number} following_id   [Optional] Followed User unique ID (Primary key).
  *
- * @apiExample {js} Fetch example 1:
+ * @apiExample {js} Fetch example in order to get all friendships of the current logged user:
  *   fetch("http://localhost:3001/friendships", {
  *
  *      method: 'GET',
@@ -24,7 +24,7 @@ let db = require('../queries/friendships');
  *
  *    })
  *
- * @apiExample {js} Fetch example 2:
+ * @apiExample {js} Fetch example 2 in order to get a friendships of a specific user with the current logged in user:
  *   fetch("http://localhost:3001/friendships?following_id=" + some_user_id, {
  *
  *      method: 'GET',

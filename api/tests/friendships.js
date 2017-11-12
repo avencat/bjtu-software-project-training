@@ -93,6 +93,20 @@ describe('Testing friendships methods', function () {
       });
   });
 
+  it('Get the number of user a specific user follow', (done) => {
+    request(server)
+      .get('/followingNb?user_id=' + user_id)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200, done);
+  });
+
+  it('Get the number of user that follows a specific user', (done) => {
+    request(server)
+      .get('/followerNb?user_id=' + user_id)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200, done);
+  });
+
   it('Follow someone with bad informations', (done) => {
     request(server)
       .post('/friendships')

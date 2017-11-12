@@ -152,4 +152,18 @@ describe('Testing users methods', function () {
       .expect(400, done);
   });
 
+  it('Delete a user not authorized', (done) => {
+    request(server)
+      .delete('/users/' + (user_id + 1))
+      .set('Authorization', 'Bearer ' + token)
+      .expect(403, done);
+  });
+
+  it('Delete a user', (done) => {
+    request(server)
+      .delete('/users/' + user_id)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200, done);
+  });
+
 });

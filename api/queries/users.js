@@ -52,8 +52,8 @@ function createUser(req, res, next) {
 
     body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none(format('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated)' +
-      'values(%1$L, %2$L, %3$L, %4$L, %5$L, %6$L, %7$L, %8$L, %9$L, %9$L)',
+    db.none(format('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated, following_nb)' +
+      'values(%1$L, %2$L, %3$L, %4$L, %5$L, %6$L, %7$L, %8$L, %9$L, %9$L, 0)',
       body.firstname, body.lastname, body.birthday, body.email, body.login, body.gender, body.telephone, body.password, body.created))
       .then(() => {
         res.status(201)
@@ -221,8 +221,6 @@ function getUsers(req, res, next) {
     })
     .catch(function (err) {
 
-      console.log(err);
-
       return next(err);
 
     });
@@ -249,11 +247,13 @@ function login(req, res, next) {
 
         const payload = { id: user.id };
         const token = jwt.sign(payload, jwtSecretOrKey);
+
         res.json({
           status: "success",
           message: "User successfully logged in.",
           token: token,
-          user_id: user.id
+          user_id: user.id,
+          following_nb: user.following_nb
         });
 
       } else {

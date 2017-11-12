@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS socialnetworktest;
-CREATE DATABASE socialnetworktest;
+DROP DATABASE IF EXISTS socialnetwork;
+CREATE DATABASE socialnetwork;
 
-\c socialnetworktest;
+\c socialnetwork;
 
 CREATE TABLE      users (
   id              SERIAL PRIMARY KEY,
@@ -15,6 +15,7 @@ CREATE TABLE      users (
   password        TEXT NOT NULL,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
+  following_nb    BIGINT,
   CONSTRAINT      login_min_length CHECK (length(login) >= 5)
 );
 
@@ -90,6 +91,39 @@ CREATE TABLE      gender (
 -- **************************
 -- * Functions and triggers *
 -- **************************
+
+CREATE FUNCTION manage_following_nb()
+  RETURNS TRIGGER AS $trigger_manage_comments_nb$
+
+BEGIN
+
+  -- Check that follower_id is given
+  IF (TG_OP = 'INSERT') THEN
+    IF NEW.follower_id IS NULL THEN
+      RAISE EXCEPTION 'follower_id cannot be null';
+    END IF;
+  END IF;
+
+  -- Substract or add one to following_nb
+  IF (TG_OP = 'DELETE') THEN
+    UPDATE users SET following_nb = following_nb - 1 WHERE id = OLD.follower_id;
+  ELSE
+    UPDATE users SET following_nb = following_nb + 1 WHERE id = NEW.follower_id;
+  END IF;
+
+  -- Fill the time fields
+  IF (TG_OP = 'INSERT') THEN
+    NEW.created := current_timestamp;
+    NEW.updated := current_timestamp;
+
+    RETURN NEW;
+  ELSE
+    RETURN OLD;
+  END IF;
+
+END;
+
+$trigger_manage_comments_nb$ LANGUAGE plpgsql;
 
 CREATE FUNCTION manage_comments_nb()
   RETURNS TRIGGER AS $trigger_manage_comments_nb$
@@ -282,6 +316,11 @@ CREATE TRIGGER trigger_manage_comments_nb
   AFTER INSERT OR DELETE ON comments
   FOR EACH ROW
   EXECUTE PROCEDURE manage_comments_nb();
+
+CREATE TRIGGER trigger_manage_following_nb
+  AFTER INSERT OR DELETE ON friendships
+  FOR EACH ROW
+  EXECUTE PROCEDURE manage_following_nb();
 
 CREATE TRIGGER trigger_manage_likes_nb
   AFTER INSERT OR DELETE ON post_likes

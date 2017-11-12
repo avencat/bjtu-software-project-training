@@ -1,5 +1,5 @@
 let { db } = require('../database');
-import format from 'pg-format';
+let format = require('pg-format');
 
 
 function createComment(req, res, next) {

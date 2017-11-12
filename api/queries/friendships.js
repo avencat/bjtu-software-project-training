@@ -110,7 +110,7 @@ function getFriendships(req, res, next) {
 
   let request = format('SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, ' +
     'users.login, users.firstname, users.lastname ' +
-    'FROM friendships INNER JOIN users ON friendships.following = users.id ' +
+    'FROM friendships INNER JOIN users ON friendships.following_id = users.id ' +
     'WHERE friendships.follower_id = %L', req.user.id);
 
   if (req.query.following_id) {

@@ -108,14 +108,31 @@ function findFriendshipById(id, cb) {
 
 function getFriendships(req, res, next) {
 
-  let request = format('SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, ' +
-    'users.login, users.firstname, users.lastname ' +
-    'FROM friendships INNER JOIN users ON friendships.following_id = users.id ' +
-    'WHERE friendships.follower_id = %L', req.user.id);
+  const user_id = parseInt((req.query.user_id || req.query.author_id) ? (req.query.user_id | req.query.author_id) : req.user.id);
 
-  if (req.query.following_id) {
+  let request = 'SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, ' +
+    'users.login, users.firstname, users.lastname, users.id AS user_id ' +
+    'FROM friendships INNER JOIN users ON';
 
-    request = format(request + ' AND friendships.following_id = %L', req.query.following_id)
+  if (req.query.followers && req.query.followers === 'true') {
+
+    request = format(request + ' friendships.follower_id = users.id WHERE friendships.following_id = %L', user_id);
+
+    if (req.query.follower_id) {
+
+      request = format(request + ' AND friendships.follower_id = %L', req.query.follower_id)
+
+    }
+
+  } else {
+
+    request = format(request + ' friendships.following_id = users.id WHERE friendships.follower_id = %L', user_id);
+
+    if (req.query.following_id) {
+
+      request = format(request + ' AND friendships.following_id = %L', req.query.following_id)
+
+    }
 
   }
 
@@ -126,9 +143,13 @@ function getFriendships(req, res, next) {
     .then((data) => {
 
       if (Array.isArray(data)) {
+
         return (serializeFriendships(data));
+
       } else {
+
         return (serializeFriendship(data));
+
       }
 
     })
@@ -171,7 +192,7 @@ function serializeFriendship(data) {
     follower_id: data.follower_id,
     following_date: data.following_date,
     user: {
-      id: data.following_id,
+      id: data.user_id,
       login: data.login,
       firstname: data.firstname,
       lastname: data.lastname

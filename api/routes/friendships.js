@@ -9,7 +9,10 @@ let db = require('../queries/friendships');
  * @apiName GetFrienships
  * @apiGroup Friendship
  *
- * @apiParam {Number} following_id   [Optional] Followed User unique ID (Primary key).
+ * @apiParam {Number} following_id    [Optional] Followed User unique ID (Primary key).
+ * @apiParam {Number} follower_id     [Optional] User following unique ID (Primary key).
+ * @apiParam {Bool} followers         [Optional] Option to look for followers instead of following.
+ *
  *
  * @apiExample {js} Fetch example in order to get all friendships of the current logged user:
  *   fetch("http://localhost:3001/friendships", {
@@ -24,7 +27,46 @@ let db = require('../queries/friendships');
  *
  *    })
  *
- * @apiExample {js} Fetch example 2 in order to get a friendships of a specific user with the current logged in user:
+ * @apiExample {js} Fetch example in order to get all users that follow user 2:
+ *   fetch("http://localhost:3001/friendships?followers=true&user_id=" + 2, {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ * @apiExample {js} Fetch example in order to get the friendship of user 2 following user 3:
+ *   fetch("http://localhost:3001/friendships?user_id=" + 2 + "&following_id=" + 3, {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ * @apiExample {js} Fetch example in order to get the friendship of user 2 followed by user 3:
+ *   fetch("http://localhost:3001/friendships?followers=true&user_id=" + 2 + "&follower_id=" + 3, {
+ *
+ *      method: 'GET',
+ *
+ *      headers: {
+ *        'Accept': 'application/json',
+ *        'Content-Type': 'application/json',
+ *        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+ *      }
+ *
+ *    })
+ *
+ * @apiExample {js} Fetch example in order to get a friendship of a specific user with the current logged in user:
  *   fetch("http://localhost:3001/friendships?following_id=" + some_user_id, {
  *
  *      method: 'GET',

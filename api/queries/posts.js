@@ -1,5 +1,6 @@
 let { db } = require('../database');
 let commentsQueries = require('./comments');
+let format = require('pg-format');
 
 
 function createPost(req, res, next) {
@@ -189,17 +190,25 @@ function getAllPosts(req, res, next) {
 
   let request = 'SELECT posts.id, posts.content, posts.author_id, posts.likes_nb, posts.comments_nb, posts.created, posts.updated, ' +
     'users.login, users.firstname, users.lastname ' +
-    'FROM posts INNER JOIN users ON posts.author_id = users.id';
+    'FROM posts INNER JOIN users ON posts.author_id = users.id ';
 
   if (req.query.author_id || req.query.user_id) {
 
-    request += ' WHERE posts.author_id = $1';
+    const following_id = parseInt(req.query.author_id || req.query.user_id);
+
+    if (following_id === req.user.id) {
+      request = format(request + 'WHERE posts.author_id = %L', req.user.id);
+    } else {
+      request = format(request + 'WHERE posts.author_id IN (SELECT following_id FROM friendships WHERE follower_id = %L AND following_id = %L)', req.user.id, following_id, req.user.id);
+    }
+
+  } else {
+
+    request = format(request + 'WHERE posts.author_id IN (SELECT following_id FROM friendships WHERE follower_id = %L) OR posts.author_id = %L', req.user.id, req.user.id);
 
   }
 
-  const user_id = parseInt(req.query.author_id || req.query.user_id);
-
-  db.any(request + ' ORDER BY posts.id DESC, posts.created DESC', user_id)
+  db.any(format(request + ' ORDER BY posts.id DESC, posts.created DESC'))
 
     .then((data) => {
 

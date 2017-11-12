@@ -184,7 +184,7 @@ function getUsers(req, res, next) {
 
   if (req.query.q) {
 
-    query = format(query + ' WHERE users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L OR users.email LIKE %1$L', '%' + req.query.q + '%');
+    query = format(query + ' WHERE users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L OR users.email = %1$L', '%' + req.query.q + '%');
 
   }
 

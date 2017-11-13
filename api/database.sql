@@ -10,12 +10,14 @@ CREATE TABLE      users (
   birthday        DATE,
   email           TEXT UNIQUE NOT NULL,
   login           TEXT UNIQUE NOT NULL,
-  gender          SMALLINT,
+  gender          BIGINT,
   telephone       TEXT UNIQUE,
   password        TEXT NOT NULL,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  following_nb    BIGINT,
+  following_nb    BIGINT NOT NULL DEFAULT 0,
+  follower_nb     BIGINT NOT NULL DEFAULT 0,
+  FOREIGN KEY     (gender) REFERENCES gender(id),
   CONSTRAINT      login_min_length CHECK (length(login) >= 5)
 );
 
@@ -39,8 +41,8 @@ CREATE TABLE      posts (
   content         TEXT,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  comments_nb     BIGINT,
-  likes_nb        BIGINT,
+  comments_nb     BIGINT NOT NULL DEFAULT 0,
+  likes_nb        BIGINT NOT NULL DEFAULT 0,
   FOREIGN KEY     (author_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -51,7 +53,7 @@ CREATE TABLE      comments (
   content         TEXT,
   created         TIMESTAMPTZ,
   updated         TIMESTAMPTZ,
-  likes_nb        BIGINT,
+  likes_nb        BIGINT NOT NULL DEFAULT 0,
   FOREIGN KEY     (author_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY     (post_id)   REFERENCES posts(id) ON DELETE CASCADE
 );
@@ -86,6 +88,10 @@ CREATE TABLE      gender (
   updated         TIMESTAMPTZ
 );
 
+INSERT INTO       gender(title, description) VALUES('Male', 'Gender for boys and men');
+INSERT INTO       gender(title, description) VALUES('Female', 'Gender for girls and women');
+INSERT INTO       gender(title, description) VALUES('Other', 'Gender for everyone else');
+
 
 
 -- **************************
@@ -93,7 +99,7 @@ CREATE TABLE      gender (
 -- **************************
 
 CREATE FUNCTION manage_following_nb()
-  RETURNS TRIGGER AS $trigger_manage_comments_nb$
+  RETURNS TRIGGER AS $trigger_manage_following_nb$
 
 BEGIN
 
@@ -101,29 +107,41 @@ BEGIN
   IF (TG_OP = 'INSERT') THEN
     IF NEW.follower_id IS NULL THEN
       RAISE EXCEPTION 'follower_id cannot be null';
+    ELSEIF NEW.following_id IS NULL THEN
+      RAISE EXCEPTION 'following_id cannot be null';
     END IF;
   END IF;
 
   -- Substract or add one to following_nb
   IF (TG_OP = 'DELETE') THEN
+
     UPDATE users SET following_nb = following_nb - 1 WHERE id = OLD.follower_id;
+    UPDATE users SET follower_nb = follower_nb - 1 WHERE id = OLD.following_id;
+
   ELSE
+
     UPDATE users SET following_nb = following_nb + 1 WHERE id = NEW.follower_id;
+    UPDATE users SET follower_nb = follower_nb + 1 WHERE id = NEW.following_id;
+
   END IF;
 
   -- Fill the time fields
   IF (TG_OP = 'INSERT') THEN
+
     NEW.created := current_timestamp;
     NEW.updated := current_timestamp;
 
     RETURN NEW;
+
   ELSE
+
     RETURN OLD;
+
   END IF;
 
 END;
 
-$trigger_manage_comments_nb$ LANGUAGE plpgsql;
+$trigger_manage_following_nb$ LANGUAGE plpgsql;
 
 CREATE FUNCTION manage_comments_nb()
   RETURNS TRIGGER AS $trigger_manage_comments_nb$

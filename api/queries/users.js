@@ -52,8 +52,8 @@ function createUser(req, res, next) {
 
     body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none(format('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated, following_nb)' +
-      'values(%1$L, %2$L, %3$L, %4$L, %5$L, %6$L, %7$L, %8$L, %9$L, %9$L, 0)',
+    db.none(format('INSERT into users(firstname, lastname, birthday, email, login, gender, telephone, password, created, updated, following_nb, follower_nb)' +
+      'values(%1$L, %2$L, %3$L, %4$L, %5$L, %6$L, %7$L, %8$L, %9$L, %9$L, 0, 0)',
       body.firstname, body.lastname, body.birthday, body.email, body.login, body.gender, body.telephone, body.password, body.created))
       .then(() => {
         res.status(201)
@@ -68,12 +68,12 @@ function createUser(req, res, next) {
         if (err.constraint === "users_email_key") {
 
           err.status = 400;
-          err.message = "Email taken."
+          err.message = "Email already taken."
 
         } else if (err.constraint === "users_login_key") {
 
           err.status = 400;
-          err.message = "Login taken."
+          err.message = "Login already taken."
 
         }
         return next(err);
@@ -157,9 +157,18 @@ function findUserByLogin(username, cb) {
 
 function getSingleUser(req, res, next) {
 
-  const userId = req.params.id ? parseInt(req.params.id) : req.user.id;
+  const user_id = req.params.id ? parseInt(req.params.id) : req.user.id;
 
-  db.oneOrNone(format('SELECT id, login, firstname, lastname, birthday, email, gender, telephone FROM users WHERE id = %L', userId))
+  let request = 'SELECT users.id, users.login, users.firstname, users.lastname, users.birthday, users.following_nb, users.follower_nb, ' +
+    'gender.id AS gender_id, gender.title AS gender_title, gender.description AS gender_description';
+
+  if (user_id === req.user.id) {
+
+    request += ', users.telephone, users.email'
+
+  }
+
+  db.oneOrNone(format(request + ' FROM users LEFT JOIN gender ON users.gender = gender.id WHERE users.id = %L', user_id))
 
     .then(function (data) {
 
@@ -192,10 +201,12 @@ function getSingleUser(req, res, next) {
 
 function getUsers(req, res, next) {
 
-  let query = format('SELECT users.id, users.firstname, users.lastname, users.login, friendships.id AS friendship_id ' +
+  let query = format('SELECT users.id, users.firstname, users.lastname, users.login, users.birthday, users.gender, users.following_nb, users.follower_nb,' +
+    ' friendships.id AS friendship_id, gender.id AS gender_id, gender.title AS gender_title, gender.description AS gender_description ' +
     'FROM users ' +
     'LEFT JOIN friendships ' +
     'ON friendships.following_id = users.id AND friendships.follower_id = %1$L ' +
+    'LEFT JOIN gender ON gender.id = users.gender ' +
     'WHERE users.id != %1$L',
     req.user.id);
 

@@ -5,7 +5,8 @@ import Post from '../components/Post';
 import PostModal from '../components/PostModal';
 import CommentModal from '../components/CommentModal';
 
-export default class Profile extends Component {
+
+export default class MyPost extends Component {
 
   constructor(props) {
     super(props);
@@ -58,7 +59,7 @@ export default class Profile extends Component {
 
     if (this.state.user) {
 
-      const url = "http://localhost:3001/posts";
+      const url = "http://localhost:3001/posts?author_id=" + sessionStorage.getItem('userId');
 
       fetch(url, {
 
@@ -247,7 +248,7 @@ export default class Profile extends Component {
 
           <div className="jumbotron">
 
-            <h2 className="text-center">Home</h2>
+            <h2 className="text-center">My Post</h2>
 
             {
               user ?
@@ -277,7 +278,7 @@ export default class Profile extends Component {
 
                 </span>
 
-              :
+                :
 
                 <div/>
             }

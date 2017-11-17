@@ -88,7 +88,7 @@ export default class CommentModal extends Component {
       this.fetchComments(newProps);
     }
 
-    setTimeout(() => (this.textarea.focus()), 600);
+    setTimeout(() => (this.textarea && this.textarea.focus()), 600);
 
   }
 

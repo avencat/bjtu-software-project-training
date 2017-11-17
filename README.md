@@ -100,7 +100,7 @@ or
 npm start
 ```
 
-Then go to `http://localhost:3001/register` and you should be able to register you first user.
+Then go to `http://localhost:3000/register` and you should be able to register you first user.
 
 #### Congratulations!
 

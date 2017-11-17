@@ -11,9 +11,15 @@ export default class Navbar extends Component {
 
     this.user = sessionStorage.getItem("userToken");
 
+    this.state = {
+      search: ''
+    }
+
     this.onLogin = this.onLogin.bind(this);
     this.onLogout = this.onLogout.bind(this);
     this.onRegister = this.onRegister.bind(this);
+    this.onSubmit = this.onSubmit.bind(this);
+    this.onChange = this.onChange.bind(this);
   }
 
 
@@ -51,6 +57,14 @@ export default class Navbar extends Component {
     }
   }
 
+  onChange(e) {
+    // Because we named the inputs to match their corresponding values in state, it's
+    // super easy to update the state
+    const state = this.state;
+    state[e.target.name] = e.target.value;
+    this.setState(state);
+  }
+
 
   onLogin() {
 
@@ -75,8 +89,18 @@ export default class Navbar extends Component {
 
   }
 
+  onSubmit() {
+
+    const { search } = this.state;
+
+    this.props.router.push({ pathname: '/follow', search: '?search=' + search });
+
+  }
+
 
   render() {
+
+    const { search } = this.state;
 
     return (
 
@@ -97,10 +121,24 @@ export default class Navbar extends Component {
                     <span style={styles.styleNavBarText}>Profile</span>
                   </Link>
                 </li>
-
+                <li>
+                  <Link to="/mypost">
+                    <span style={styles.styleNavBarText}>My Posts</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/following">
+                    <span style={styles.styleNavBarText}>Following</span>
+                  </Link>
+                </li>
+                <li>
+                  <form onSubmit={this.onSubmit}>
+                    <input value={search} placeholder="Search" name="search" id="search" style={{marginTop: 13, marginBottom: 15}} type="search" onChange={this.onChange}/>
+                  </form>
+                </li>
               </ul>
 
-            :
+              :
 
               <div/>
 

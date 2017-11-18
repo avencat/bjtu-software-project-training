@@ -74,6 +74,7 @@ div.alert.alert-dismissible.fade.show.in {
 
 .underline:hover {
   text-decoration: underline;
+  cursor: pointer;
 }
 
 @keyframes App-logo-spin {

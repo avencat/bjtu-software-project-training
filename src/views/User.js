@@ -27,17 +27,39 @@ export default class User extends Component {
       flashTimer: 3000,
       flashMessage: '',
       showFlashMessage: false,
-      followering: ''
+      followering: '',
+      friendship_id: null
     };
 
     this.onChange = this.onChange.bind(this);
+    this.onFollow = this.onFollow.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.onUnfollow = this.onUnfollow.bind(this);
     this.fetchPosts = this.fetchPosts.bind(this);
     this.displayAlert = this.displayAlert.bind(this);
     this.setModalPostContent = this.setModalPostContent.bind(this);
     this.fetchUserInformations = this.fetchUserInformations.bind(this);
     this.handleHideFlashMessage = this.handleHideFlashMessage.bind(this);
     this.setModalCommentsContent = this.setModalCommentsContent.bind(this);
+  }
+
+
+  componentWillReceiveProps(newProps) {
+
+    if (!newProps.location.state || !newProps.location.state.user || newProps.location.state.user.id !== this.state.user_id) {
+
+      let user_id = (newProps.location.state && newProps.location.state.user && newProps.location.state.user.id) ? newProps.location.state.user.id : sessionStorage.getItem("userId");
+
+      this.setState({
+        user_id
+      }, () => {
+
+        this.fetchUserInformations();
+
+      })
+
+    }
+
   }
 
 
@@ -163,6 +185,7 @@ export default class User extends Component {
 
           this.setState({
             user: data.user,
+            friendship_id: data.user.friendship_id,
             followering: ' (' + data.user.following_nb + ' following / ' + data.user.follower_nb + ' followers)'
           }, () => {
             this.fetchPosts();
@@ -300,6 +323,106 @@ export default class User extends Component {
   }
 
 
+  onFollow() {
+
+    fetch("http://localhost:3001/friendships", {
+
+      method: 'POST',
+
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+      },
+
+      body: JSON.stringify({
+        "following_id": this.state.user_id
+      })
+
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+
+      if (data.status === "success") {
+
+        let friendship_id = data.friendship_id;
+
+        this.setState({ friendship_id });
+
+        this.fetchPosts();
+
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
+      }
+
+    }).catch((err) => {
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
+    });
+
+  }
+
+
+  onUnfollow() {
+
+    fetch("http://localhost:3001/friendships/" + this.state.friendship_id, {
+
+      method: 'DELETE',
+
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+      }
+
+    }).then((data) => {
+      return data.json()
+    }).then((data) => {
+
+      if (data.status === "success") {
+
+        let friendship_id = data.friendship_id;
+
+        this.setState({ friendship_id, listPosts: [] });
+
+      } else {
+
+        this.props.displayAlert(
+
+          data.message,
+          'danger',
+          10000
+
+        );
+
+      }
+
+    }).catch((err) => {
+      this.props.displayAlert(
+
+        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
+        'danger',
+        10000
+
+      );
+    });
+
+  }
+
+
   render() {
 
     const { listPosts, user, user_id, showFlashMessage, flashMessage, flashStatus, flashTimer, modalComments, followering, modalPost, post } = this.state;
@@ -320,7 +443,21 @@ export default class User extends Component {
 
         <div className="col-sm-12">
 
-          <div className="jumbotron">
+          <div className="jumbotron" style={{position: 'relative'}}>
+
+            {
+              user_id !== logged_user_id &&
+
+              <span style={styles.actionButtons}>
+
+                <button className={"btn btn-" + (this.state.friendship_id ? 'danger' : 'primary')} type="button" onClick={() => { this.state.friendship_id ? this.onUnfollow() : this.onFollow()}}>
+
+                  {this.state.friendship_id ? 'Unfollow' : 'Follow'}
+
+                </button>
+
+              </span>
+            }
 
             <h2 className="text-center">
               {
@@ -398,6 +535,12 @@ export default class User extends Component {
 }
 
 const styles = {
+
+  actionButtons: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+  },
 
   postPostContainer: {
 

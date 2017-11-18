@@ -110,9 +110,7 @@ export default class ToFollow extends Component {
 
       if (data.status === "success") {
 
-        let friendship_id = this.state.friendship_id;
-
-        friendship_id = data.friendship_id;
+        let friendship_id = data.friendship_id;
 
         this.setState({ friendship_id });
 

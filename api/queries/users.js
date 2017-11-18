@@ -160,7 +160,7 @@ function getSingleUser(req, res, next) {
   const user_id = req.params.id ? parseInt(req.params.id) : req.user.id;
 
   let request = 'SELECT users.id, users.login, users.firstname, users.lastname, users.birthday, users.following_nb, users.follower_nb, ' +
-    'gender.id AS gender_id, gender.title AS gender_title, gender.description AS gender_description';
+    'gender.id AS gender_id, gender.title AS gender_title, gender.description AS gender_description, friendships.id AS friendship_id';
 
   if (user_id === req.user.id) {
 
@@ -168,7 +168,9 @@ function getSingleUser(req, res, next) {
 
   }
 
-  db.oneOrNone(format(request + ' FROM users LEFT JOIN gender ON users.gender = gender.id WHERE users.id = %L', user_id))
+  db.oneOrNone(format(request + ' FROM users LEFT JOIN gender ON users.gender = gender.id ' +
+    'LEFT JOIN friendships ON friendships.follower_id = %1$L AND friendships.following_id = %2$L ' +
+    'WHERE users.id = %2$L', req.user.id, user_id))
 
     .then(function (data) {
 

@@ -3,6 +3,14 @@ CREATE DATABASE socialnetworktest;
 
 \c socialnetworktest;
 
+CREATE TABLE      gender (
+  id              SERIAL PRIMARY KEY,
+  title           TEXT NOT NULL,
+  description     TEXT,
+  created         TIMESTAMPTZ,
+  updated         TIMESTAMPTZ
+);
+
 CREATE TABLE      users (
   id              SERIAL PRIMARY KEY,
   firstname       TEXT,
@@ -78,14 +86,6 @@ CREATE TABLE      comment_likes (
   UNIQUE          (user_id, comment_id),
   FOREIGN KEY     (user_id)     REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY     (comment_id)  REFERENCES comments(id) ON DELETE CASCADE
-);
-
-CREATE TABLE      gender (
-  id              SERIAL PRIMARY KEY,
-  title           TEXT NOT NULL,
-  description     TEXT,
-  created         TIMESTAMPTZ,
-  updated         TIMESTAMPTZ
 );
 
 INSERT INTO       gender(title, description) VALUES('Male', 'Gender for boys and men');

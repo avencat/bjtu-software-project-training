@@ -1,12 +1,12 @@
 \c socialnetwork;
 
-INSERT INTO users(login, email, password) VALUES('pandalred', 'pandalred@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
-INSERT INTO users(login, email, password) VALUES('akabay', 'akabay@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
-INSERT INTO users(login, email, password) VALUES('avencat', 'avencat@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
-INSERT INTO users(login, email, password) VALUES('malloc', 'malloc@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
-INSERT INTO users(login, email, password) VALUES('leaker', 'leak@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
-INSERT INTO users(login, email, password) VALUES('freeer', 'free@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
-INSERT INTO users(login, email, password) VALUES('miniyoda', 'miniyoda@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
+INSERT INTO users(login, email, password, firstname, lastname) VALUES('pandalred', 'pandalred@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e', 'Arnaud', 'Thomazo');
+INSERT INTO users(firstname, lastname, login, email, password) VALUES('Louis', 'Vezia', 'akabay', 'akabay@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
+INSERT INTO users(firstname, lastname, login, email, password) VALUES('Axel', 'Vencatareddy', 'avencat', 'avencat@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
+INSERT INTO users(firstname, lastname, login, email, password) VALUES('Céline', 'Couderc', 'julia', 'julia@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
+INSERT INTO users(login, email, password) VALUES('beijingirl', 'beijingirl@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
+INSERT INTO users(login, email, password) VALUES('venagen', 'venagen@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
+INSERT INTO users(firstname, lastname, login, email, password) VALUES('Matthieu', 'Debrit', 'miniyoda', 'miniyoda@me.com', '$2a$10$KOjovT62mnqly08Gup5ToOlVdHQ2q8i8lcDihaDGscPfkoNDRk26e');
 
 INSERT INTO posts(author_id, content) VALUES (1, 'Quibus partiendo putat semel efficiatur docet veri putat ac concludaturque philosophiae efficiatur definitiones aliquid in iudicia omne tollit dividendo dividendo aliquid falsi nudus et semel sensibus non quidem dicitur tradit tollit iudicia modo rerum qua quo disserendi iudicia ratio falsi quaerendi logikh dividendo vester modo omne ut est quaerendi pro probatum mihi quo aliquid nudus mihi tradit non pro ambigua ambigua inermis non et ratio si ac iudicia partiendo sit semel non docet quae veri pro parte sit ostendit ratio docet probatum probatum nihil ponit qua tollit nudus ac omne ut parte quae et in inermis quidem inermis mihi probatum.');
 INSERT INTO posts(author_id, content) VALUES (2, 'Iamque scalas velut impetu per exsaturati divulsa per membrorum eosque funibus constrinxerunt exsaturati eodem flumen in per deformitatem ultimam conpage ultimam conpage scalas discursu mox mortuorum ultimam abiecerunt impetu funibus impetu in ampla constrinxerunt ad itidem constrinxerunt mox spatia funibus artuum ad in mox civitatis eosque per artuum civitatis raptavere praecipitem iamque superscandentes mortuorum et praecipitem ad et abiecerunt divulsa scalas superscandentes per ampla conpage eodem mox deformitatem per flumen funibus membrorum per acri spatia eosque corpora spatia velut Domitianum per truncata exsaturati eosque velut praecipitem velut per flumen eodem ad superscandentes ampla scalas membrorum iamque et conpage acri funibus.');
@@ -68,7 +68,7 @@ INSERT INTO comment_likes(comment_id, user_id) VALUES(8, 3);
 
 INSERT INTO friendships(follower_id, following_id) VALUES(3, 1);
 INSERT INTO friendships(follower_id, following_id) VALUES(3, 2);
-INSERT INTO friendships(follower_id, following_id) VALUES(3, 3);
+INSERT INTO friendships(follower_id, following_id) VALUES(5, 3);
 INSERT INTO friendships(follower_id, following_id) VALUES(3, 4);
 INSERT INTO friendships(follower_id, following_id) VALUES(3, 5);
 INSERT INTO friendships(follower_id, following_id) VALUES(3, 6);

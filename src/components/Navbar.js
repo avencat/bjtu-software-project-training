@@ -11,9 +11,11 @@ export default class Navbar extends Component {
 
     this.user = sessionStorage.getItem("userToken");
 
+    let search = new URLSearchParams(props.location.search).get("search");
+
     this.state = {
-      search: ''
-    }
+      search: search || ''
+    };
 
     this.onLogin = this.onLogin.bind(this);
     this.onLogout = this.onLogout.bind(this);
@@ -122,18 +124,18 @@ export default class Navbar extends Component {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/mypost">
-                    <span style={styles.styleNavBarText}>My Posts</span>
-                  </Link>
-                </li>
-                <li>
                   <Link to="/following">
                     <span style={styles.styleNavBarText}>Following</span>
                   </Link>
                 </li>
                 <li>
+                  <Link to="/settings">
+                    <span style={styles.styleNavBarText}>Settings</span>
+                  </Link>
+                </li>
+                <li>
                   <form onSubmit={this.onSubmit}>
-                    <input value={search} placeholder="Search" name="search" id="search" style={{marginTop: 13, marginBottom: 15}} type="search" onChange={this.onChange}/>
+                    <input value={search} placeholder="Search" name="search" id="search" style={{marginTop: 7}} type="search" className="form-control" onChange={this.onChange}/>
                   </form>
                 </li>
               </ul>

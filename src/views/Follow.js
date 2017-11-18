@@ -20,7 +20,6 @@ export default class Follow extends Component {
     };
 
     this.displayAlert = this.displayAlert.bind(this);
-
   };
 
   componentDidMount() {
@@ -65,9 +64,15 @@ export default class Follow extends Component {
 
       if (data.status === "success") {
 
-        const listFollow = data.data.map((oneUser) => {
-          return (<ToFollow key={oneUser.id} userToFollow={oneUser} friendship_id={oneUser.friendship_id} toFollow={oneUser} displayAlert={this.displayAlert}/>)
-        });
+        const listFollow = data.data.map((oneUser) => (
+          <ToFollow
+            key={oneUser.id}
+            friendship_id={oneUser.friendship_id}
+            userToFollow={oneUser}
+            displayAlert={this.displayAlert}
+            router={this.props.router}
+          />
+        ));
 
         this.setState({
           follows: data.data,

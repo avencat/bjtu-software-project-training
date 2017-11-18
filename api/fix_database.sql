@@ -17,6 +17,8 @@ ALTER TABLE posts ALTER COLUMN likes_nb SET NOT NULL;
 ALTER TABLE comments ALTER COLUMN likes_nb SET DEFAULT 0;
 ALTER TABLE comments ALTER COLUMN likes_nb SET NOT NULL;
 
+ALTER TABLE friendships ADD CONSTRAINT no_follow_yourself CHECK (follower_id != following_id);
+
 
 INSERT INTO       gender(title, description) VALUES('Male', 'Gender for boys and men');
 INSERT INTO       gender(title, description) VALUES('Female', 'Gender for girls and women');

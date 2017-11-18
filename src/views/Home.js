@@ -83,7 +83,16 @@ export default class Profile extends Component {
 
             }
 
-            return (<Post post={onePost} key={onePost.id} setModalPost={this.setModalPostContent} setModalComment={this.setModalCommentsContent} displayAlert={this.displayAlert}/>);
+            return (
+              <Post
+                post={onePost}
+                key={onePost.id}
+                router={this.props.router}
+                setModalPost={this.setModalPostContent}
+                setModalComment={this.setModalCommentsContent}
+                displayAlert={this.displayAlert}
+              />
+            );
           });
 
           this.setState({

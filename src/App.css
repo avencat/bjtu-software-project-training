@@ -24,7 +24,7 @@
 
 .navbar-right { margin-right: 0px !important}
 .log {
-  margin: 5px 10px 0 0;
+  margin: 7px 10px 0 0;
 }
 
 @font-face {
@@ -70,6 +70,10 @@ div.alert.alert-dismissible.fade.show.in {
 
 .jumbotron {
   margin-top: 100px;
+}
+
+.underline:hover {
+  text-decoration: underline;
 }
 
 @keyframes App-logo-spin {

@@ -20,6 +20,7 @@ export default class ToFollow extends Component {
     this.onFollow = this.onFollow.bind(this);
     this.onUnfollow = this.onUnfollow.bind(this);
     this.getListFollow = this.getListFollow.bind(this);
+    this.onClickOnUser = this.onClickOnUser.bind(this);
   }
 
 
@@ -161,9 +162,7 @@ export default class ToFollow extends Component {
         if (data.status === "success") {
 
 
-          let friendship_id = this.state.friendship_id;
-
-          friendship_id = data.friendship_id;
+          let friendship_id = data.friendship_id;
 
           this.setState({ friendship_id });
 
@@ -194,6 +193,15 @@ export default class ToFollow extends Component {
   }
 
 
+  onClickOnUser() {
+
+    const { userToFollow } = this.state;
+
+    this.props.router.push({ pathname: '/user', state: { user: userToFollow } });
+
+  }
+
+
   render() {
 
     const { userToFollow } = this.state;
@@ -205,13 +213,13 @@ export default class ToFollow extends Component {
 
           <div className="row">
 
-            <b  className="col-lg-10" style={styles.stylePostLogin}>
+            <b  className="col-lg-10 underline" style={styles.stylePostLogin} onClick={this.onClickOnUser}>
               {
                 (userToFollow.firstname && userToFollow.lastname) ?
 
                   userToFollow.firstname + ' ' + userToFollow.lastname
 
-                  :
+                :
 
                   userToFollow.login
               }
@@ -278,6 +286,7 @@ const styles = {
 
   stylePostLogin: {
 
+    cursor: 'pointer',
     fontSize: 20
 
   }

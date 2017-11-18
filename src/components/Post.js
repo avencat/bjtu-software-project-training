@@ -20,6 +20,7 @@ export default class Post extends Component {
     this.onLike = this.onLike.bind(this);
     this.onDislike = this.onDislike.bind(this);
     this.getListLikes = this.getListLikes.bind(this);
+    this.onClickOnUser = this.onClickOnUser.bind(this);
   }
 
 
@@ -186,6 +187,16 @@ export default class Post extends Component {
   }
 
 
+  onClickOnUser() {
+
+    const { user } = this.state.post;
+
+    if (this.props.router)
+      this.props.router.push({ pathname: '/user', state: { user } });
+
+  }
+
+
   render() {
 
     const { isLike, post, likeId } = this.state;
@@ -195,7 +206,17 @@ export default class Post extends Component {
       <li key={post.id} className="list-group-item" style={styles.postContainer}>
         <div>
           <div className="row">
-            <b className="col-lg-10" style={styles.stylePostLogin}>{(post.user.firstname && post.user.lastname) ? post.user.firstname + ' ' + post.user.lastname : post.user.login}</b>
+            <b className={"col-lg-10" + (this.props.router ? " underline" : "")} style={styles.stylePostLogin} onClick={this.onClickOnUser}>
+              {
+                (post.user.firstname && post.user.lastname) ?
+
+                  post.user.firstname + ' ' + post.user.lastname
+
+                :
+
+                  post.user.login
+              }
+            </b>
 
             <span style={styles.actionButtons}>
 
@@ -283,9 +304,15 @@ const styles = {
 Post.propTypes = {
 
   post: PropTypes.object.isRequired,
+  router: PropTypes.object,
 
   displayAlert: PropTypes.func.isRequired,
-  setModalPost: PropTypes.func.isRequired,
+  setModalPost: PropTypes.func,
   setModalComment: PropTypes.func.isRequired
 
+};
+
+Post.defaultProps = {
+  setModalPost: () => {},
+  router: null,
 };

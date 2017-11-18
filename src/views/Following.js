@@ -88,7 +88,7 @@ export default class Following extends Component {
 
       );
 
-    })
+    });
 
     fetch("http://localhost:3001/followerNb?user_id=" + sessionStorage.getItem("userId"), {
 
@@ -154,10 +154,16 @@ export default class Following extends Component {
 
       if (data.status === "success") {
 
-        const listFollow = data.data.map((oneUser) => {
-
-          return (<ToFollow key={oneUser.id} userToFollow={oneUser.user} friendship_id={oneUser.id} fetchFollowers={this.fetchNBFollow} displayAlert={this.displayAlert}/>)
-        });
+        const listFollow = data.data.map((friendship) => (
+          <ToFollow
+            key={friendship.id}
+            userToFollow={friendship.user}
+            friendship_id={friendship.id}
+            fetchFollowers={this.fetchNBFollow}
+            displayAlert={this.displayAlert}
+            router={this.props.router}
+          />
+        ));
 
         this.setState({
           follows: data.data,
@@ -208,8 +214,11 @@ export default class Following extends Component {
 
           <div className="jumbotron">
 
-            <h2 className="text-center">{ this.state.followingNB } following</h2>
-            <h2 className="text-center">{ this.state.followerNB } followers</h2>
+            <h2 className="text-center">
+              {
+                this.state.followingNB + ' following / ' + this.state.followerNB + ' followers'
+              }
+            </h2>
 
             <div>
               <ul className="list-group">

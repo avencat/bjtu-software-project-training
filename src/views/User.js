@@ -6,10 +6,13 @@ import PostModal from '../components/PostModal';
 import CommentModal from '../components/CommentModal';
 
 
-export default class MyPost extends Component {
+export default class User extends Component {
 
   constructor(props) {
     super(props);
+
+    let user = props.location.state && props.location.state.user;
+    let user_id = (user && user.id) ? user.id : sessionStorage.getItem("userId");
 
     this.state = {
       post: '',
@@ -18,11 +21,13 @@ export default class MyPost extends Component {
       listPosts: [],
       modalPost: { id: 0, content: '' },
       modalComments: { id: 0, content: '', user: {} },
-      user: sessionStorage.getItem("userId"),
+      user,
+      user_id: user_id,
       flashStatus: '',
       flashTimer: 3000,
       flashMessage: '',
-      showFlashMessage: false
+      showFlashMessage: false,
+      followering: ''
     };
 
     this.onChange = this.onChange.bind(this);
@@ -30,6 +35,7 @@ export default class MyPost extends Component {
     this.fetchPosts = this.fetchPosts.bind(this);
     this.displayAlert = this.displayAlert.bind(this);
     this.setModalPostContent = this.setModalPostContent.bind(this);
+    this.fetchUserInformations = this.fetchUserInformations.bind(this);
     this.handleHideFlashMessage = this.handleHideFlashMessage.bind(this);
     this.setModalCommentsContent = this.setModalCommentsContent.bind(this);
   }
@@ -50,7 +56,7 @@ export default class MyPost extends Component {
 
   componentDidMount() {
 
-    this.fetchPosts();
+    this.fetchUserInformations();
 
   }
 
@@ -59,7 +65,7 @@ export default class MyPost extends Component {
 
     if (this.state.user) {
 
-      const url = "http://localhost:3001/posts?author_id=" + sessionStorage.getItem('userId');
+      const url = "http://localhost:3001/posts?author_id=" + this.state.user.id;
 
       fetch(url, {
 
@@ -84,7 +90,15 @@ export default class MyPost extends Component {
 
             }
 
-            return (<Post post={onePost} key={onePost.id} setModalPost={this.setModalPostContent} setModalComment={this.setModalCommentsContent} displayAlert={this.displayAlert}/>);
+            return (
+              <Post
+                post={onePost}
+                key={onePost.id}
+                setModalPost={this.setModalPostContent}
+                setModalComment={this.setModalCommentsContent}
+                displayAlert={this.displayAlert}
+              />
+            )
           });
 
           this.setState({
@@ -126,6 +140,64 @@ export default class MyPost extends Component {
 
   }
 
+
+  fetchUserInformations() {
+
+    if (this.state.user_id) {
+
+      fetch("http://localhost:3001/users/" + this.state.user_id, {
+
+        method: 'GET',
+
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
+        }
+
+      }).then(data => {
+        return (data.json());
+      }).then(data => {
+
+        if (data.status === "success") {
+
+          this.setState({
+            user: data.user,
+            followering: ' (' + data.user.following_nb + ' following / ' + data.user.follower_nb + ' followers)'
+          }, () => {
+            this.fetchPosts();
+          });
+
+        } else {
+
+          this.displayAlert(
+
+            data.message,
+            'danger',
+            10000
+
+          );
+
+        }
+
+      }).catch(err => {
+
+        this.setState({
+
+          flashStatus: 'danger',
+          flashMessage: "Couldn't get user informations, please try again later. If the error persists, please contact us at social@network.net",
+          flashTimer: 10000,
+          showFlashMessage: true
+
+        });
+
+      });
+
+    }
+
+  }
+
+
   onChange(e) {
     // Because we named the inputs to match their corresponding values in state, it's
     // super easy to update the state
@@ -133,6 +205,7 @@ export default class MyPost extends Component {
     state[e.target.name] = e.target.value;
     this.setState(state);
   }
+
 
   onSubmit(e) {
     e.preventDefault();
@@ -229,7 +302,8 @@ export default class MyPost extends Component {
 
   render() {
 
-    const { post, listPosts, user, showFlashMessage, flashMessage, flashStatus, flashTimer, modalPost, modalComments } = this.state;
+    const { listPosts, user, user_id, showFlashMessage, flashMessage, flashStatus, flashTimer, modalComments, followering, modalPost, post } = this.state;
+    const logged_user_id = sessionStorage.getItem("userId");
 
     return (
       <div style={{position: 'relative'}}>
@@ -248,27 +322,45 @@ export default class MyPost extends Component {
 
           <div className="jumbotron">
 
-            <h2 className="text-center">My Posts</h2>
+            <h2 className="text-center">
+              {
+                ((user && user.firstname && user.lastname) ?
+
+                  (user.firstname + ' ' + user.lastname)
+
+                :
+
+                  user && user.login)
+
+                + followering
+              }
+            </h2>
 
             {
-              user ?
+              user_id &&
 
                 <span>
-                  <form onSubmit={this.onSubmit}>
 
-                    <div className="form-group" style={styles.postPostContainer}>
+                  {
+                    user_id === logged_user_id &&
 
-                      <div className="col-lg-10">
-                        <input placeholder="What's new?" required={true} className="form-control" value={post} name='post' id="post" onChange={this.onChange}/>
+                    <form onSubmit={this.onSubmit}>
+
+                      <div className="form-group" style={styles.postPostContainer}>
+
+                        <div className="col-lg-10">
+                          <input placeholder="What's new?" required={true} className="form-control" value={post} name='post' id="post" onChange={this.onChange}/>
+                        </div>
+
+                        <div className="col-lg-1">
+                          <input className="btn btn-lg btn-primary" type="submit" value="Submit"/>
+                        </div>
+
                       </div>
 
-                      <div className="col-lg-1">
-                        <input className="btn btn-lg btn-primary" type="submit" value="Submit"/>
-                      </div>
+                    </form>
 
-                    </div>
-
-                  </form>
+                  }
 
                   <div>
                     <ul className="list-group">
@@ -277,10 +369,6 @@ export default class MyPost extends Component {
                   </div>
 
                 </span>
-
-                :
-
-                <div/>
             }
 
           </div>
@@ -308,7 +396,6 @@ export default class MyPost extends Component {
     );
   }
 }
-
 
 const styles = {
 

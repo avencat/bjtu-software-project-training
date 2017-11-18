@@ -40,7 +40,8 @@ CREATE TABLE      friendships (
   updated         TIMESTAMPTZ,
   FOREIGN KEY     (follower_id)   REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY     (following_id)  REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE          (follower_id, following_id)
+  UNIQUE          (follower_id, following_id),
+  CONSTRAINT      no_follow_yourself CHECK (follower_id != following_id)
 );
 
 CREATE TABLE      posts (

@@ -212,13 +212,13 @@ function getUsers(req, res, next) {
 
   if (req.query.q) {
 
-    query = format(query + ' AND users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L OR users.email = %2$L',
+    query = format(query + ' AND (users.firstname LIKE %1$L OR users.lastname LIKE %1$L OR users.login LIKE %1$L OR users.email = %2$L)',
       '%' + req.query.q + '%',
       req.query.q);
 
   }
 
-  db.any(query)
+  db.any(format(query + ' ORDER BY friendships.following_id DESC'))
 
     .then(function (data) {
 

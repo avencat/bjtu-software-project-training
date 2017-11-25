@@ -15,4 +15,5 @@ func Init() {
 	Router.Handle("/profile", queries.ValidateToken(http.HandlerFunc(queries.NotImplemented))).Methods("Post")
 	Router.HandleFunc("/logout", queries.NotImplemented)
 	initUsers()
+	initFriendships()
 }

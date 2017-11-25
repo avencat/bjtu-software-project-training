@@ -16,4 +16,8 @@ func initUsers() {
 		Methods("GET")
 	Router.Handle("/users/{id}", queries.ValidateToken(http.HandlerFunc(queries.GetSingleUser))).
 		Methods("GET")
+	Router.Handle("/users/{id}", queries.ValidateToken(http.HandlerFunc(queries.UpdateUser))).
+		Methods("PUT")
+	Router.Handle("/users", queries.ValidateToken(http.HandlerFunc(queries.UpdateUser))).
+		Methods("PUT")
 }

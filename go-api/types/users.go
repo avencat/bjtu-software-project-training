@@ -23,18 +23,18 @@ type User struct {
 }
 
 type UserForm struct {
-	Id          int64       `json:"id"`
+	Id          int64       `json:"id,omitempty"`
 	Firstname   string      `json:"firstname,omitempty"`
 	Lastname    string      `json:"lastname,omitempty"`
-	Birthday    *time.Time   `json:"birthday,omitempty"`
+	Birthday    *time.Time  `json:"birthday,omitempty"`
 	Email       string      `json:"email,omitempty"`
 	Login       string      `json:"login,omitempty"`
 	Telephone   string      `json:"telephone,omitempty"`
 	Password    string      `json:"password,omitempty"`
 	FollowerNb  int64       `json:"follower_nb"`
 	FollowingNb int64       `json:"following_nb"`
-	Created     *time.Time   `json:"created,omitempty"`
-	Updated     *time.Time   `json:"updated,omitempty"`
+	Created     *time.Time  `json:"created,omitempty"`
+	Updated     *time.Time  `json:"updated,omitempty"`
 }
 
 type UserResponse struct {
@@ -48,11 +48,13 @@ type UserResponse struct {
 type SingleUserData struct {
 	User
 	FriendshipId    sql.NullInt64   `json:"friendship_id"`
+	FollowingDate   pq.NullTime     `json:"following_date"`
 }
 
 type SingleUserDataResponse struct {
 	UserForm
 	FriendshipId    int64           `json:"friendship_id,omitempty"`
+	FollowingDate   *time.Time       `json:"following_date,omitempty"`
 }
 
 type SingleUserResponse struct {

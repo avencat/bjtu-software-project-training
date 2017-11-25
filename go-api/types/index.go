@@ -15,3 +15,9 @@ type Claims struct {
 	Id          int64   `json:"id"`
 	jwt.StandardClaims  `json:"standardClaims"`
 }
+
+type ResponseData struct {
+	Status      string      `json:"status"`
+	Data        interface{} `json:"data"`
+	Message     string      `json:"message"`
+}

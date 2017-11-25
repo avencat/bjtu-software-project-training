@@ -56,16 +56,12 @@ func CreateUser(res http.ResponseWriter, req *http.Request) {
 
 	if len(body.Password) < 6 {
 
-		fmt.Println(body.Password)
-
 		db.JsonResponse(http.StatusBadRequest, res, types.Response{
 			Status:     "error",
 			Message:    "Password should be at least 6 characters.",
 		})
 
 	} else if !matchEmail {
-
-		fmt.Println("email")
 
 		db.JsonResponse(http.StatusBadRequest, res, types.Response{
 			Status:     "error",
@@ -74,16 +70,12 @@ func CreateUser(res http.ResponseWriter, req *http.Request) {
 
 	} else if !matchLogin {
 
-		fmt.Println("login")
-
 		db.JsonResponse(http.StatusBadRequest, res, types.Response{
 			Status:     "error",
 			Message:    "Login should be at least 5 characters and use only a-z, 1-9 or _.",
 		})
 
 	} else {
-
-		fmt.Println("afterAll")
 
 		pass, _ := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
@@ -316,7 +308,7 @@ func GetSingleUser(res http.ResponseWriter, req *http.Request) {
 		userDataResponse.Lastname = userData.Lastname.String
 	}
 	if userData.Birthday.Valid {
-		*userDataResponse.Birthday = userData.Birthday.Time
+		userDataResponse.Birthday = &(userData.Birthday.Time)
 	}
 	if userData.FollowingNb.Valid {
 		userDataResponse.FollowingNb = userData.FollowingNb.Int64
@@ -351,7 +343,7 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
 
 	query := "SELECT users.id, users.firstname, users.lastname, users.login, users.birthday, users.following_nb, users.follower_nb," +
-		" friendships.id AS friendship_id " +
+		" friendships.id AS friendship_id, friendships.following_date AS following_date " +
 		"FROM users " +
 		"LEFT JOIN friendships " +
 		"ON friendships.following_id = users.id AND friendships.follower_id = $1 " +
@@ -395,7 +387,7 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 		var user types.SingleUserData
 		if err := results.
 			Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Login, &user.Birthday,
-			&user.FollowingNb, &user.FollowerNb, &user.FriendshipId); err != nil {
+			&user.FollowingNb, &user.FollowerNb, &user.FriendshipId, &user.FollowingDate); err != nil {
 			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
 				Status:     "error",
 				Message:    err.Error(),
@@ -419,7 +411,7 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 			singleUser.Lastname = user.Lastname.String
 		}
 		if user.Birthday.Valid {
-			*singleUser.Birthday = user.Birthday.Time
+			singleUser.Birthday = &(user.Birthday.Time)
 		}
 		if user.FollowingNb.Valid {
 			singleUser.FollowingNb = user.FollowingNb.Int64
@@ -428,7 +420,10 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 			singleUser.FollowerNb = user.FollowerNb.Int64
 		}
 		if user.FriendshipId.Valid {
-			singleUser.Id = user.FriendshipId.Int64
+			singleUser.FriendshipId = user.FriendshipId.Int64
+		}
+		if user.FollowingDate.Valid {
+			singleUser.FollowingDate = &(user.FollowingDate.Time)
 		}
 
 		users = append(users, singleUser)
@@ -481,9 +476,13 @@ func ValidateToken(h http.Handler) http.Handler {
 
 func UpdateUser(res http.ResponseWriter, req *http.Request) {
 
+	mailRegex := "(\\w[-._\\w]*\\w@\\w[-._\\w]*\\w\\.\\w{2,3})"
 	loginRegex := "^[a-z_0-9]{5,}$"
+	emailErrorRegex := "(users_email_key)"
 	loginErrorRegex := "(users_login_key)"
 	now := time.Now()
+
+	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
 
 	var body types.UserForm
 	decoder := json.NewDecoder(req.Body)
@@ -493,7 +492,14 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	var matchLogin bool
+	var matchEmail, matchLogin bool
+
+	if body.Email != "" {
+		body.Email = strings.TrimSpace(strings.ToLower(body.Email))
+		matchEmail, err = regexp.MatchString(mailRegex, body.Email)
+	} else {
+		matchEmail = false
+	}
 
 	if body.Login != "" {
 		body.Login = strings.TrimSpace(strings.ToLower(body.Login))
@@ -509,7 +515,14 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 			Message:    "Password should be at least 6 characters.",
 		})
 
-	} else if login := db.NewNullString(body.Login); login.Valid && !matchLogin {
+	} else if !matchEmail {
+
+		db.JsonResponse(http.StatusBadRequest, res, types.Response{
+			Status:     "error",
+			Message:    "Bad email.",
+		})
+
+	} else if !matchLogin {
 
 		db.JsonResponse(http.StatusBadRequest, res, types.Response{
 			Status:     "error",
@@ -523,11 +536,16 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 			body.Password = string(pass)
 		}
 
-		_, err := db.Db.Exec("INSERT into users(firstname, lastname, birthday, login, telephone, password, created, updated, following_nb, follower_nb) values($1, $2, $3, $4, $5, $6, $7, $7, 0, 0)",
-			db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday, db.NewNullString(body.Login), db.NewNullString(body.Telephone), db.NewNullString(body.Password), now)
+		_, err := db.Db.Exec("UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), telephone=COALESCE($5, telephone), password=COALESCE($6, password), updated=$7 WHERE id = $8",
+			db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday, db.NewNullString(body.Login), db.NewNullString(body.Telephone), db.NewNullString(body.Password), now, loggedId)
 
 		if err != nil {
-			if matchError, _ := regexp.MatchString(loginErrorRegex, err.Error()); matchError {
+			if matchErrorEmail, _ := regexp.MatchString(emailErrorRegex, err.Error()); matchErrorEmail {
+				db.JsonResponse(http.StatusBadRequest, res, types.Response{
+					Status:     "error",
+					Message:    "Email already taken.",
+				})
+			} else if matchError, _ := regexp.MatchString(loginErrorRegex, err.Error()); matchError {
 				db.JsonResponse(http.StatusBadRequest, res, types.Response{
 					Status:     "error",
 					Message:    "Login already taken.",

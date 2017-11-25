@@ -18,4 +18,8 @@ func initFriendships() {
 		Methods("PUT")
 	Router.Handle("/friendships", queries.ValidateToken(http.HandlerFunc(queries.NotImplemented))).
 		Methods("PUT")
+	Router.Handle("/followerNb", queries.ValidateToken(http.HandlerFunc(queries.GetFollowerNb))).
+		Methods("GET")
+	Router.Handle("/followingNb", queries.ValidateToken(http.HandlerFunc(queries.GetFollowingNb))).
+		Methods("GET")
 }

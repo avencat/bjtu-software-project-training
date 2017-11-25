@@ -266,3 +266,111 @@ func GetFriendships(res http.ResponseWriter, req *http.Request) {
 		Message:    "Retrieved friendships",
 	})
 }
+
+func GetFollowingNb(res http.ResponseWriter, req *http.Request) {
+
+	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	var userId int64; var ok, err error
+	vars := mux.Vars(req)
+	userIdString := vars["user_id"]
+	if userIdString == "" {
+		userIdString = vars["author_id"]
+		if userIdString == "" {
+			userId = loggedId
+		} else {
+			userId, ok = strconv.ParseInt(userIdString, 10, 64)
+			if ok != nil {
+				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
+					Status:     "error",
+					Message:    ok.Error(),
+				})
+				CheckErr(ok)
+				return
+			}
+		}
+	} else {
+		userId, ok = strconv.ParseInt(userIdString, 10, 64)
+		if ok != nil {
+			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
+				Status:     "error",
+				Message:    ok.Error(),
+			})
+			CheckErr(ok)
+			return
+		}
+	}
+
+	var count sql.NullInt64
+
+	err = db.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE follower_id = $1", userId).Scan(&count)
+
+	if err != nil && err != sql.ErrNoRows {
+		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
+			Status:     "error",
+			Message:    err.Error(),
+		})
+		CheckErr(err)
+		return
+	}
+
+	db.JsonResponse(http.StatusOK, res, types.ResponseData{
+		Status:     "success",
+		Data:       count.Int64,
+		Message:    "Retrieved number of users that follow user " + string(userId),
+	})
+
+}
+
+func GetFollowerNb(res http.ResponseWriter, req *http.Request) {
+
+	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	var userId int64; var ok, err error
+	vars := mux.Vars(req)
+	userIdString := vars["user_id"]
+	if userIdString == "" {
+		userIdString = vars["author_id"]
+		if userIdString == "" {
+			userId = loggedId
+		} else {
+			userId, ok = strconv.ParseInt(userIdString, 10, 64)
+			if ok != nil {
+				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
+					Status:     "error",
+					Message:    ok.Error(),
+				})
+				CheckErr(ok)
+				return
+			}
+		}
+	} else {
+		userId, ok = strconv.ParseInt(userIdString, 10, 64)
+		if ok != nil {
+			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
+				Status:     "error",
+				Message:    ok.Error(),
+			})
+			CheckErr(ok)
+			return
+		}
+	}
+
+	var count sql.NullInt64
+
+	err = db.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE following_id = $1", userId).Scan(&count)
+
+	if err != nil && err != sql.ErrNoRows {
+		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
+			Status:     "error",
+			Message:    err.Error(),
+		})
+		CheckErr(err)
+		return
+	}
+
+	db.JsonResponse(http.StatusOK, res, types.ResponseData{
+		Status:     "success",
+		Data:       count.Int64,
+		Message:    "Retrieved number of users that user " + string(userId) + " is following",
+	})
+
+}

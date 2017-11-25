@@ -317,7 +317,7 @@ func GetSingleUser(res http.ResponseWriter, req *http.Request) {
 		userDataResponse.FollowerNb = userData.FollowerNb.Int64
 	}
 	if userData.FriendshipId.Valid {
-		userDataResponse.Id = userData.FriendshipId.Int64
+		userDataResponse.FriendshipId = userData.FriendshipId.Int64
 	}
 	if userData.Email.Valid {
 		userDataResponse.Email = userData.Email.String

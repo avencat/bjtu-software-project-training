@@ -64,7 +64,7 @@ export default class Following extends Component {
       if (data.status === "success") {
 
         this.setState({
-          followingNB: data.data[0].count
+          followingNB: data.data
         });
       } else {
 
@@ -107,7 +107,7 @@ export default class Following extends Component {
       if (data.status === "success") {
 
         this.setState({
-          followerNB: data.data[0].count
+          followerNB: parseInt(data.data, 10)
         });
       } else {
 
@@ -217,7 +217,7 @@ export default class Following extends Component {
 
             <h2 className="text-center">
               {
-                this.state.followingNB + ' following / ' + this.state.followerNB + ' followers'
+                this.state.followingNB + ' following / ' + this.state.followerNB + ' follower' + (this.state.followerNB > 1 ? 's' : '')
               }
             </h2>
 

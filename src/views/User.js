@@ -186,7 +186,7 @@ export default class User extends Component {
           this.setState({
             user: data.user,
             friendship_id: data.user.friendship_id,
-            followering: ' (' + data.user.following_nb + ' following / ' + data.user.follower_nb + ' followers)'
+            followering: ' (' + data.user.following_nb + ' following / ' + data.user.follower_nb + ' follower' + (parseInt(data.user.follower_nb, 10) > 1 ? 's)' : ')')
           }, () => {
             this.fetchPosts();
           });

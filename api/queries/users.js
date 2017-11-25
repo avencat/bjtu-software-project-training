@@ -204,7 +204,7 @@ function getSingleUser(req, res, next) {
 function getUsers(req, res, next) {
 
   let query = format('SELECT users.id, users.firstname, users.lastname, users.login, users.birthday, users.following_nb, users.follower_nb,' +
-    ' friendships.id AS friendship_id ' +
+    ' friendships.id AS friendship_id, friendships.following_date AS following_date ' +
     'FROM users ' +
     'LEFT JOIN friendships ' +
     'ON friendships.following_id = users.id AND friendships.follower_id = %1$L ' +

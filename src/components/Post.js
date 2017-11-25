@@ -209,21 +209,21 @@ export default class Post extends Component {
           <div className="row">
             <span>
               <b className={(this.props.router ? " underline" : "")} style={styles.stylePostLogin} onClick={this.onClickOnUser}>
-              {
-                (post.user.firstname && post.user.lastname) ?
+                {
+                  (post.user.firstname && post.user.lastname) ?
 
-                  post.user.firstname + ' ' + post.user.lastname
+                    post.user.firstname + ' ' + post.user.lastname
 
-                :
+                  :
 
-                  post.user.login
-              }
+                    post.user.login
+                }
               </b>
-            <br/>
+              <br/>
               <span style={{marginLeft: 15}}>
-              {
-                moment(post.created).format("DD MMMM YYYY HH:mm")
-              }
+                {
+                  moment(post.created).format("DD MMMM YYYY HH:mm")
+                }
               </span>
             </span>
             <span style={styles.actionButtons}>

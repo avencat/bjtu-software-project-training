@@ -111,7 +111,13 @@ export default class CommentModal extends Component {
       if (data.status === "success") {
 
         const listComment = data.data.map((oneComment) =>
-          <Comment comment={oneComment} key={oneComment.id} onModify={this.fetchComments} displayAlert={this.props.displayAlert} />
+          <Comment
+            comment={oneComment}
+            key={oneComment.id}
+            onModify={this.fetchComments}
+            displayAlert={this.props.displayAlert}
+            router={this.props.router}
+          />
         );
 
         this.setState({

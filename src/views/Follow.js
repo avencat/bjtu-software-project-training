@@ -67,6 +67,7 @@ export default class Follow extends Component {
         const listFollow = data.data.map((oneUser) => (
           <ToFollow
             key={oneUser.id}
+            following_date={oneUser.following_date}
             friendship_id={oneUser.friendship_id}
             userToFollow={oneUser}
             displayAlert={this.displayAlert}

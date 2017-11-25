@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Textarea from 'react-textarea-autosize';
+import moment from "moment/moment";
 
 export default class Comment extends Component {
 
@@ -14,7 +15,8 @@ export default class Comment extends Component {
       comment: this.props.comment || {},
       content: this.props.comment ? this.props.comment.content : '',
       isLike: false,
-      likeId: null
+      likeId: null,
+      logged_user_id: sessionStorage.getItem('userId')
 
     };
 
@@ -25,8 +27,8 @@ export default class Comment extends Component {
     this.onDislike = this.onDislike.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
     this.getListLikes = this.getListLikes.bind(this);
+    this.onClickOnUser = this.onClickOnUser.bind(this);
     this.moveCaretAtEnd = this.moveCaretAtEnd.bind(this);
-
   }
 
 
@@ -339,6 +341,15 @@ export default class Comment extends Component {
     e.target.value = temp_value
   }
 
+  onClickOnUser() {
+
+    const { user } = this.state.comment;
+
+    if (this.props.router)
+      this.props.router.push({ pathname: '/user', state: { user } });
+
+  }
+
 
   render() {
 
@@ -352,17 +363,24 @@ export default class Comment extends Component {
 
           <div className="row" style={styles.commentContainer}>
 
-            <b>
-              {
-                (comment.user.firstname && comment.user.lastname) ?
+            <span style={{ display: 'flex', flexDirection: 'column', paddingBottom: 3 }}>
+              <b>
+                {
+                    (comment.user.firstname && comment.user.lastname) ?
 
-                  comment.user.firstname + ' ' + comment.user.lastname
+                        comment.user.firstname + ' ' + comment.user.lastname
 
-                :
+                        :
 
-                  comment.user.login
-              }
-            </b>
+                        comment.user.login
+                }
+              </b>
+              <span style={{fontSize: 11}}>
+                {
+                    moment(comment.created).format("DD MMMM YYYY HH:mm")
+                }
+              </span>
+            </span>
 
             {
 

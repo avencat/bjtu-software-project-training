@@ -157,6 +157,7 @@ export default class Following extends Component {
         const listFollow = data.data.map((friendship) => (
           <ToFollow
             key={friendship.id}
+            following_date={friendship.following_date}
             userToFollow={friendship.user}
             friendship_id={friendship.id}
             fetchFollowers={this.fetchNBFollow}

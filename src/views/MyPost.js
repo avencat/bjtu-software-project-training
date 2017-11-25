@@ -300,6 +300,7 @@ export default class MyPost extends Component {
           post={modalComments.content}
           login={(modalComments.user.firstname && modalComments.user.lastname) ? '' + modalComments.user.firstname + ' ' + modalComments.user.lastname : '' + modalComments.user.login}
 
+          router={this.props.router}
           onModify={this.fetchPosts}
           displayAlert={this.displayAlert}
         />

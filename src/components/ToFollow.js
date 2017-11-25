@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import moment from "moment/moment";
 
 
 export default class ToFollow extends Component {
@@ -10,81 +11,16 @@ export default class ToFollow extends Component {
 
     this.state = {
 
-      followId: null,
+      followId: this.props.friendship_id,
       userToFollow: this.props.userToFollow || {},
-      friendship_id: this.props.friendship_id || null
+      friendship_id: this.props.friendship_id || null,
+      following_date: this.props.following_date || null
 
     };
 
-
     this.onFollow = this.onFollow.bind(this);
     this.onUnfollow = this.onUnfollow.bind(this);
-    this.getListFollow = this.getListFollow.bind(this);
     this.onClickOnUser = this.onClickOnUser.bind(this);
-  }
-
-
-  componentDidMount() {
-
-    this.getListFollow()
-
-  }
-
-  getListFollow() {
-
-    fetch("http://localhost:3001/friendships", {
-
-      method: 'GET',
-
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + sessionStorage.getItem("userToken")
-      }
-
-    }).then((data) => {
-      return data.json()
-    }).then((data) => {
-
-
-      if (data.status === "success") {
-
-        const listFollower = data.data;
-
-        for (let i = 0; i < listFollower.length; i++) {
-          if (listFollower[i].user.id === sessionStorage.getItem("userId")) {
-
-            this.setState({
-
-              followId: listFollower[i].id
-
-            });
-          }
-        }
-      } else {
-
-        this.props.displayAlert(
-
-          data.message,
-          'danger',
-          10000
-
-        );
-
-      }
-
-    }).catch((err) => {
-
-      this.props.displayAlert(
-
-        (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,
-        'danger',
-        10000
-
-      );
-
-    })
-
   }
 
 
@@ -112,7 +48,7 @@ export default class ToFollow extends Component {
 
         let friendship_id = data.friendship_id;
 
-        this.setState({ friendship_id });
+        this.setState({ friendship_id, following_date: Date.now() });
 
         this.props.fetchFollowers();
 
@@ -162,7 +98,7 @@ export default class ToFollow extends Component {
 
           let friendship_id = data.friendship_id;
 
-          this.setState({ friendship_id });
+          this.setState({ friendship_id, following_date: null });
 
           this.props.fetchFollowers();
 
@@ -202,7 +138,7 @@ export default class ToFollow extends Component {
 
   render() {
 
-    const { userToFollow } = this.state;
+    const { userToFollow, friendship_id, following_date } = this.state;
 
     return (
 
@@ -211,17 +147,27 @@ export default class ToFollow extends Component {
 
           <div className="row">
 
-            <b  className="col-lg-10 underline" style={styles.stylePostLogin} onClick={this.onClickOnUser}>
+            <span className="col-lg-10" style={styles.userContainer}>
+              <b className="underline" style={styles.stylePostLogin} onClick={this.onClickOnUser}>
+                {
+                  (userToFollow.firstname && userToFollow.lastname) ?
+
+                    userToFollow.firstname + ' ' + userToFollow.lastname
+
+                  :
+
+                    userToFollow.login
+                }
+              </b>
               {
-                (userToFollow.firstname && userToFollow.lastname) ?
-
-                  userToFollow.firstname + ' ' + userToFollow.lastname
-
-                :
-
-                  userToFollow.login
+                friendship_id &&
+                  <span style={{fontSize: 14, marginLeft: 5}}>
+                    {
+                        ` - Followed since ${moment(following_date).format("DD MMMM YYYY HH:mm")}`
+                    }
+                  </span>
               }
-            </b>
+            </span>
 
 
             <span style={styles.actionButtons}>
@@ -282,10 +228,17 @@ const styles = {
 
   },
 
+  userContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+
   stylePostLogin: {
 
     cursor: 'pointer',
-    fontSize: 20
+    fontSize: 20,
+    paddingLeft: 0,
 
   }
 

@@ -2,8 +2,6 @@
 
 
 ALTER TABLE users ADD COLUMN follower_nb BIGINT NOT NULL DEFAULT 0;
-ALTER TABLE users ALTER COLUMN gender TYPE BIGINT;
-ALTER TABLE users ADD FOREIGN KEY (gender) REFERENCES gender(id);
 ALTER TABLE users ALTER COLUMN following_nb SET DEFAULT 0;
 ALTER TABLE users ALTER COLUMN following_nb SET NOT NULL;
 
@@ -18,11 +16,6 @@ ALTER TABLE comments ALTER COLUMN likes_nb SET DEFAULT 0;
 ALTER TABLE comments ALTER COLUMN likes_nb SET NOT NULL;
 
 ALTER TABLE friendships ADD CONSTRAINT no_follow_yourself CHECK (follower_id != following_id);
-
-
-INSERT INTO       gender(title, description) VALUES('Male', 'Gender for boys and men');
-INSERT INTO       gender(title, description) VALUES('Female', 'Gender for girls and women');
-INSERT INTO       gender(title, description) VALUES('Other', 'Gender for everyone else');
 
 
 

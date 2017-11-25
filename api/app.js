@@ -25,7 +25,7 @@ jwtOptions.secretOrKey = '25015c61-030e-452f-a92f-5b8cdb0b627e';
 
 passport.use(new JwtStrategy(jwtOptions, function(jwt_payload, next) {
 
-  // usually this would be a database call:
+  // usually this would be a db call:
   dbUsers.findUserById(jwt_payload.id, (err, user) => {
 
     if (err) {

@@ -54,10 +54,11 @@ class Login extends Component {
     }).then((data) => {
       return data.json()
     }).then((data) => {
-      sessionStorage.setItem("userToken", data.token);
-      sessionStorage.setItem("userId", data.user_id);
 
       if (data.status === "success") {
+
+        sessionStorage.setItem("userToken", data.token);
+        sessionStorage.setItem("userId", data.user_id);
 
         this.props.router.replace({ pathname: '/', state: { flashStatus: "success", flashMessage: "Welcome!" } });
 

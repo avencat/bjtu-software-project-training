@@ -18,7 +18,8 @@ export default class Profile extends Component {
       confirmedPassword: '',
       flashStatus: '',
       flashMessage: '',
-      showFlashMessage: false
+      showFlashMessage: false,
+      flashTimer: 6000
     };
 
     this.onChange = this.onChange.bind(this);
@@ -71,6 +72,19 @@ export default class Profile extends Component {
     const state = this.state;
     state[e.target.name] = e.target.value;
     this.setState(state);
+  }
+
+  displayAlert(message = '', status = 'info', timer = 5000) {
+
+      this.setState({
+
+          showFlashMessage: true,
+          flashMessage: message,
+          flashStatus: status,
+          flashTimer: timer
+
+      });
+
   }
 
   onSubmit(e) {
@@ -156,7 +170,7 @@ export default class Profile extends Component {
 
   render() {
 
-    const { login, firstname, lastname, email, password, confirmedPassword, showFlashMessage, flashStatus, flashMessage } = this.state;
+    const { login, firstname, lastname, email, password, confirmedPassword, showFlashMessage, flashStatus, flashMessage, flashTimer } = this.state;
 
     return (
       <div style={{position: 'relative'}}>
@@ -165,7 +179,7 @@ export default class Profile extends Component {
           visible={showFlashMessage}
           message={flashMessage}
           status={flashStatus}
-          dismissTimer={6000}
+          dismissTimer={flashTimer}
           onDismiss={this.handleHideFlashMessage}
         />
 

@@ -2,7 +2,16 @@ let promise = require('bluebird');
 
 let options = {
   // Initialization Options
-  promiseLib: promise
+  promiseLib: promise,
+
+  error(err, e) {
+
+    if (err.error) {
+      console.error(err.error);
+      process.exit(1);
+    }
+
+  }
 };
 
 const databaseURL = require('./config.json');

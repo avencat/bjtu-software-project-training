@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import moment from 'moment';
 
 
 export default class Post extends Component {
@@ -206,7 +207,8 @@ export default class Post extends Component {
       <li key={post.id} className="list-group-item" style={styles.postContainer}>
         <div>
           <div className="row">
-            <b className={"col-lg-10" + (this.props.router ? " underline" : "")} style={styles.stylePostLogin} onClick={this.onClickOnUser}>
+            <span>
+              <b className={(this.props.router ? " underline" : "")} style={styles.stylePostLogin} onClick={this.onClickOnUser}>
               {
                 (post.user.firstname && post.user.lastname) ?
 
@@ -216,8 +218,14 @@ export default class Post extends Component {
 
                   post.user.login
               }
-            </b>
-
+              </b>
+            <br/>
+              <span style={{marginLeft: 15}}>
+              {
+                moment(post.created).format("DD MMMM YYYY HH:mm")
+              }
+              </span>
+            </span>
             <span style={styles.actionButtons}>
 
               <button className={"btn btn-" + (isLike ? 'danger' : 'primary')} type="button" onClick={() => { isLike ? this.onDislike(likeId) : this.onLike(post.id)}}  style={styles.actionButton}>
@@ -294,8 +302,8 @@ const styles = {
 
   stylePostLogin: {
 
-    fontSize: 20
-
+    fontSize: 20,
+    marginLeft: 15
   }
 
 };

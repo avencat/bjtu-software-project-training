@@ -269,10 +269,6 @@ BEGIN
   END IF;
 
   -- Fill the time fields
-  IF (TG_OP = 'INSERT') THEN
-    NEW.created := NOW();
-  END IF;
-  NEW.updated := NOW();
 
   RETURN NEW;
 

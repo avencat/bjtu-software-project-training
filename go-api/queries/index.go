@@ -2,27 +2,24 @@ package queries
 
 import (
 	"net/http"
-	"../db"
-	"../types"
+	"github.com/labstack/echo"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type Response struct {
 	Message string `json:"message"`
 }
 
-var NotImplemented = http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-	v := req.Context().Value(types.MyUserKey{})
+func getUserId(c echo.Context) int64 {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
 
-	if v == nil {
-		db.JsonResponse(http.StatusForbidden, res, types.Response{
-			Status: "error",
-			Message: "You must log in first.",
-		})
-		return
-	} else {
-		db.JsonResponse(http.StatusNotImplemented, res, types.Response{
-			Status: "error",
-			Message: "Not Implemented.",
-		})
-	}
-})
+	return int64(claims["id"].(float64))
+}
+
+func NotImplemented(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, echo.Map{
+		"status":         "error",
+		"message":        "Not implemented.",
+	})
+}

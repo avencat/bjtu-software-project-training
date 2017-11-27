@@ -1,8 +1,6 @@
 package main
 
 import (
-    "log"
-    "net/http"
     "./routes"
 
 	/*
@@ -13,12 +11,11 @@ import (
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gorilla/mux"
 	*/
-	"fmt"
-	"github.com/gorilla/handlers"
+	//"github.com/gorilla/handlers"
 )
 
 func main() {
 	routes.Init()
-	fmt.Println("Server listening on port :3001")
-    log.Fatal(http.ListenAndServe(":3001", handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(routes.Router)))
+	routes.Router.Logger.Fatal(routes.Router.Start(":3001"))
+    //log.Fatal(http.ListenAndServe(":3001", handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(routes.Router)))
 }

@@ -207,7 +207,7 @@ function getAllPosts(req, res, next) {
 
   }
 
-  db.any(format(request + ' ORDER BY posts.id DESC, posts.created DESC'))
+  db.any(format(request + ' ORDER BY posts.created DESC, posts.id DESC'))
 
     .then((data) => {
 

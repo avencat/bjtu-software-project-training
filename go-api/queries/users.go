@@ -4,25 +4,24 @@ import (
 	"../db"
 	"net/http"
 	"time"
-	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
-	"log"
 	"../types"
 	"fmt"
-	"context"
 	"strings"
 	"database/sql"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
-	"github.com/gorilla/mux"
 	"strconv"
+	"github.com/labstack/echo"
+	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 )
 
 
 const JwtSecret = "25015c61-030e-452f-a92f-5b8cdb0b627e"
 
 
-func CreateUser(res http.ResponseWriter, req *http.Request) {
+func CreateUser(c echo.Context) error {
 
 	mailRegex := "(\\w[-._\\w]*\\w@\\w[-._\\w]*\\w\\.\\w{2,3})"
 	loginRegex := "^[a-z_0-9]{5,}$"
@@ -31,48 +30,43 @@ func CreateUser(res http.ResponseWriter, req *http.Request) {
 	now := time.Now()
 
 	var body types.UserForm
-	decoder := json.NewDecoder(req.Body)
-	err := decoder.Decode(&body)
-	if err != nil {
-		panic(err)
-	}
-	defer req.Body.Close()
+	c.Bind(&body)
 
 	var matchEmail, matchLogin bool
 
 	if body.Email != "" {
 		body.Email = strings.TrimSpace(strings.ToLower(body.Email))
-		matchEmail, err = regexp.MatchString(mailRegex, body.Email)
+		matchEmail, _ = regexp.MatchString(mailRegex, body.Email)
 	} else {
 		matchEmail = false
 	}
 
 	if body.Login != "" {
 		body.Login = strings.TrimSpace(strings.ToLower(body.Login))
-		matchLogin, err = regexp.MatchString(loginRegex, body.Login)
+		matchLogin, _ = regexp.MatchString(loginRegex, body.Login)
 	} else {
 		matchLogin = false
 	}
 
 	if len(body.Password) < 6 {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Password should be at least 6 characters.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":         "error",
+			"message":        "Password should be at least 6 characters.",
 		})
 
 	} else if !matchEmail {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Bad email.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":         "error",
+			"message":        "Bad email.",
 		})
 
 	} else if !matchLogin {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Login should be at least 5 characters and use only a-z, 1-9 or _.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":         "error",
+			"message":        "Login should be at least 5 characters and use only a-z, 1-9 or _.",
 		})
 
 	} else {
@@ -82,29 +76,34 @@ func CreateUser(res http.ResponseWriter, req *http.Request) {
 		body.Password = string(pass)
 
 		_, err := db.Db.Exec("INSERT into users(firstname, lastname, birthday, email, login, telephone, password, created, updated, following_nb, follower_nb) values($1, $2, $3, $4, $5, $6, $7, $8, $8, 0, 0)",
-		db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday, body.Email, body.Login, db.NewNullString(body.Telephone), body.Password, now)
+		db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday, body.Email,
+			body.Login, db.NewNullString(body.Telephone), body.Password, now)
 
 		if err != nil {
 			if matchErrorEmail, _ := regexp.MatchString(emailErrorRegex, err.Error()); matchErrorEmail {
-				db.JsonResponse(http.StatusBadRequest, res, types.Response{
-					Status:     "error",
-					Message:    "Email already taken.",
+
+				return c.JSON(http.StatusBadRequest, echo.Map{
+					"status":         "error",
+					"message":        "Email already taken.",
 				})
+
 			} else if matchError, _ := regexp.MatchString(loginErrorRegex, err.Error()); matchError {
-				db.JsonResponse(http.StatusBadRequest, res, types.Response{
-					Status:     "error",
-					Message:    "Login already taken.",
+				return c.JSON(http.StatusBadRequest, echo.Map{
+					"status":         "error",
+					"message":        "Login already taken.",
 				})
 			} else {
-				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-					Status:     "error",
-					Message:    err.Error(),
+
+				return c.JSON(http.StatusBadRequest, echo.Map{
+					"status":         "error",
+					"message":        err.Error(),
 				})
 			}
 		} else {
-			db.JsonResponse(http.StatusCreated, res, types.Response{
-				Status:     "success",
-				Message:    "Inserted one user",
+
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"status":         "success",
+				"message":        "Inserted one user",
 			})
 		}
 
@@ -113,31 +112,30 @@ func CreateUser(res http.ResponseWriter, req *http.Request) {
 }
 
 
-func DeleteUser(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	deleteIdString := vars["id"]
-	userId := req.Context().Value(types.MyUserKey{}).(int64)
-	deleteId, ok := strconv.ParseInt(deleteIdString, 10, 64)
+func DeleteUser(c echo.Context) error {
+	deleteId, ok := strconv.ParseInt(c.Param("id"), 10, 64)
+	userId := getUserId(c)
+//	deleteId, ok := strconv.ParseInt(deleteIdString, 10, 64)
 
 	if ok != nil || userId != deleteId {
-		db.JsonResponse(http.StatusForbidden, res, types.Response{
-			Status:     "error",
-			Message:    "You are not authorized to delete this user.",
+		return c.JSON(http.StatusForbidden, echo.Map{
+			"status":         "error",
+			"message":        "You are not authorized to delete this user.",
 		})
 	} else {
 
 		_, err := db.Db.Exec("DELETE FROM users WHERE id = $1", userId)
 
 		if err != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    err.Error(),
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":         "error",
+				"message":        err.Error(),
 			})
 		} else {
 			message := fmt.Sprintf("Removed user %v", userId)
-			db.JsonResponse(http.StatusOK, res, types.Response{
-				Status:     "success",
-				Message:    message,
+			return c.JSON(http.StatusOK, echo.Map{
+				"status":     "success",
+				"message":    message,
 			})
 		}
 
@@ -190,77 +188,69 @@ func FindUserByLogin(username string) (types.User, error) {
 
 
 // create a JWT and return it to the client
-func Login(res http.ResponseWriter, req *http.Request) {
-
-	// Expires the token in 24 hours
-	expireToken := time.Now().Add(time.Hour * 24).Unix()
+func Login(c echo.Context) error {
 
 	var credentials types.LoginCredentials
-	decoder := json.NewDecoder(req.Body)
-	err := decoder.Decode(&credentials)
-	if err != nil {
-		panic(err)
-	}
-	defer req.Body.Close()
+	c.Bind(&credentials)
 
 	user, err := FindUserByLogin(credentials.Login)
 
 	passwordMatch := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte(credentials.Password))
 
-	if err == nil && user.Id.Valid && passwordMatch == nil {
-		claims := types.Claims {
+	if err == nil && user.Id.Status == pgtype.Present && passwordMatch == nil {
+
+		// Set custom claims
+		/*claims := types.Claims {
 			Id: user.Id.Int64,
-			StandardClaims: jwt.StandardClaims {
-				ExpiresAt: expireToken,
-				Issuer:    "socialNetwork",
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
 			},
+		}*/
+
+		// Create token with claims
+		token := jwt.New(jwt.SigningMethodHS256)
+
+		claims := token.Claims.(jwt.MapClaims)
+		claims["id"] = user.Id.Int
+		claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+		// Generate encoded token and send it as response.
+		t, err := token.SignedString([]byte(JwtSecret))
+		if err != nil {
+			return err
 		}
-
-		// Create the token using your claims
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-		// Signs the token with a secret.
-		signedToken, _ := token.SignedString([]byte(JwtSecret))
-
-		response := types.UserResponse{
-			Status:         "success",
-			Message:        "User successfully logged in.",
-			Token:          signedToken,
-			UserId:         user.Id.Int64,
-			FollowingNb:    user.FollowingNb.Int64,
-		}
-
-		db.JsonResponse(http.StatusOK, res, response)
-
+		return c.JSON(http.StatusOK, echo.Map{
+			"status":         "success",
+			"message":        "User successfully logged in.",
+			"token":          t,
+			"user_id":        user.Id.Int,
+			"following_nb":   user.FollowingNb.Int,
+		})
 	} else {
-		db.JsonResponse(http.StatusUnauthorized, res, types.Response{
-			Status:         "error",
-			Message:        "Incorrect username or password.",
+		return c.JSON(http.StatusUnauthorized, echo.Map{
+			"status":         "error",
+			"message":        "Incorrect username or password.",
 		})
 	}
 }
 
 
-func GetSingleUser(res http.ResponseWriter, req *http.Request) {
+func GetSingleUser(c echo.Context) error {
 
 	var err error
 
-	vars := mux.Vars(req)
-	userIdString := vars["id"]
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
-	userId, ok := strconv.ParseInt(userIdString, 10, 64)
+	userId, ok := strconv.ParseInt(c.Param("id"), 10, 64)
+	loggedId := getUserId(c)
 
+	if ok != nil {
+		return c.JSON(http.StatusUnauthorized, echo.Map{
+			"status":     "error",
+			"message":    "You are not authorized to access this content.",
+		})
+	}
 
 	request := "SELECT users.id, users.login, users.firstname, users.lastname, users.birthday, " +
 		"users.following_nb, users.follower_nb, friendships.id AS friendship_id"
-
-	if ok != nil {
-		db.JsonResponse(http.StatusUnauthorized, res, types.Response{
-			Status:     "error",
-			Message:    "You are not authorized to access this content.",
-		})
-		return
-	}
 
 	var userData types.SingleUserData
 
@@ -268,8 +258,9 @@ func GetSingleUser(res http.ResponseWriter, req *http.Request) {
 
 		err = db.Db.QueryRow(request + ", users.telephone, users.email FROM users " +
 			"LEFT JOIN friendships ON friendships.follower_id = $1 AND friendships.following_id = $2 " +
-			"WHERE users.id = $2", loggedId, userId).Scan(&userData.Id, &userData.Login, &userData.Firstname, &userData.Lastname, &userData.Birthday,
-			&userData.FollowingNb, &userData.FollowerNb, &userData.FriendshipId, &userData.Telephone, &userData.Email)
+			"WHERE users.id = $2", loggedId, userId).Scan(&userData.Id, &userData.Login, &userData.Firstname,
+			&userData.Lastname, &userData.Birthday, &userData.FollowingNb, &userData.FollowerNb,
+			&userData.FriendshipId, &userData.Telephone, &userData.Email)
 
 	} else {
 
@@ -282,74 +273,74 @@ func GetSingleUser(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if err != nil && err != sql.ErrNoRows {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":     "error",
+			"message":    err.Error(),
 		})
-		CheckErr(err)
-		return
 	} else if err == sql.ErrNoRows {
-		http.NotFound(res, req)
-		return
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"status":   "error",
+			"message":  "Not found.",
+		})
 	}
 
 	var userDataResponse types.SingleUserDataResponse
 
-	if userData.Id.Valid {
-		userDataResponse.Id = userData.Id.Int64
+	if userData.Id.Status == pgtype.Present {
+		userDataResponse.Id = int64(userData.Id.Int)
 	}
-	if userData.Login.Valid {
+	if userData.Login.Status == pgtype.Present {
 		userDataResponse.Login = userData.Login.String
 	}
-	if userData.Firstname.Valid {
+	if userData.Firstname.Status == pgtype.Present {
 		userDataResponse.Firstname = userData.Firstname.String
 	}
-	if userData.Lastname.Valid {
+	if userData.Lastname.Status == pgtype.Present {
 		userDataResponse.Lastname = userData.Lastname.String
 	}
-	if userData.Birthday.Valid {
+	if userData.Birthday.Status == pgtype.Present {
 		userDataResponse.Birthday = &(userData.Birthday.Time)
 	}
-	if userData.FollowingNb.Valid {
-		userDataResponse.FollowingNb = userData.FollowingNb.Int64
+	if userData.FollowingNb.Status == pgtype.Present {
+		userDataResponse.FollowingNb = int64(userData.FollowingNb.Int)
 	}
-	if userData.FollowerNb.Valid {
-		userDataResponse.FollowerNb = userData.FollowerNb.Int64
+	if userData.FollowerNb.Status == pgtype.Present {
+		userDataResponse.FollowerNb = int64(userData.FollowerNb.Int)
 	}
-	if userData.FriendshipId.Valid {
-		userDataResponse.FriendshipId = userData.FriendshipId.Int64
+	if userData.FriendshipId.Status == pgtype.Present {
+		userDataResponse.FriendshipId = int64(userData.FriendshipId.Int)
 	}
-	if userData.Email.Valid {
+	if userData.Email.Status == pgtype.Present {
 		userDataResponse.Email = userData.Email.String
 	}
-	if userData.Telephone.Valid {
+	if userData.Telephone.Status == pgtype.Present {
 		userDataResponse.Telephone = userData.Telephone.String
 	}
 
 	response := types.SingleUserResponse{
 		Status:         "success",
 		User:           userDataResponse,
-		Message:        "User successfully logged in.",
+		Message:        "User successfully retrieved.",
 	}
 
-	db.JsonResponse(http.StatusOK, res, response)
+	return c.JSON(http.StatusOK, response)
 }
 
 
-func GetUsers(res http.ResponseWriter, req *http.Request) {
+func GetUsers(c echo.Context) error {
 
-	var results *sql.Rows; var err error; var users []types.SingleUserDataResponse
+	var results *pgx.Rows; var err error; var users []types.SingleUserDataResponse
 
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	loggedId := getUserId(c)
 
-	query := "SELECT users.id, users.firstname, users.lastname, users.login, users.birthday, users.following_nb, users.follower_nb," +
-		" friendships.id AS friendship_id, friendships.following_date AS following_date " +
+	query := "SELECT users.id, users.firstname, users.lastname, users.login, users.birthday, users.following_nb," +
+		" users.follower_nb, friendships.id AS friendship_id, friendships.following_date AS following_date " +
 		"FROM users " +
 		"LEFT JOIN friendships " +
 		"ON friendships.following_id = users.id AND friendships.follower_id = $1 " +
 		"WHERE users.id != $1"
 
-	q := req.URL.Query().Get("q")
+	q := string(c.QueryParam("q"))
 
 	if q != "" {
 
@@ -358,12 +349,10 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 			loggedId, "%" + q + "%", q)
 
 		if err != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    err.Error(),
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":   "error",
+				"message":  err.Error(),
 			})
-			CheckErr(err)
-			return
 		}
 
 	} else {
@@ -372,12 +361,10 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 			loggedId)
 
 		if err != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    err.Error(),
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":   "error",
+				"message":  err.Error(),
 			})
-			CheckErr(err)
-			return
 		}
 
 	}
@@ -388,53 +375,49 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 		if err := results.
 			Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Login, &user.Birthday,
 			&user.FollowingNb, &user.FollowerNb, &user.FriendshipId, &user.FollowingDate); err != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    err.Error(),
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":   "error",
+				"message":  err.Error(),
 			})
-			CheckErr(err)
-			return
 		}
 
 		var singleUser types.SingleUserDataResponse
 
-		if user.Id.Valid {
-			singleUser.Id = user.Id.Int64
+		if user.Id.Status == pgtype.Present {
+			singleUser.Id = int64(user.Id.Int)
 		}
-		if user.Login.Valid {
+		if user.Login.Status == pgtype.Present {
 			singleUser.Login = user.Login.String
 		}
-		if user.Firstname.Valid {
+		if user.Firstname.Status == pgtype.Present {
 			singleUser.Firstname = user.Firstname.String
 		}
-		if user.Lastname.Valid {
+		if user.Lastname.Status == pgtype.Present {
 			singleUser.Lastname = user.Lastname.String
 		}
-		if user.Birthday.Valid {
+		if user.Birthday.Status == pgtype.Present {
 			singleUser.Birthday = &(user.Birthday.Time)
 		}
-		if user.FollowingNb.Valid {
-			singleUser.FollowingNb = user.FollowingNb.Int64
+		if user.FollowingNb.Status == pgtype.Present {
+			singleUser.FollowingNb = int64(user.FollowingNb.Int)
 		}
-		if user.FollowerNb.Valid {
-			singleUser.FollowerNb = user.FollowerNb.Int64
+		if user.FollowerNb.Status == pgtype.Present {
+			singleUser.FollowerNb = int64(user.FollowerNb.Int)
 		}
-		if user.FriendshipId.Valid {
-			singleUser.FriendshipId = user.FriendshipId.Int64
+		if user.FriendshipId.Status == pgtype.Present {
+			singleUser.FriendshipId = int64(user.FriendshipId.Int)
 		}
-		if user.FollowingDate.Valid {
+		if user.FollowingDate.Status == pgtype.Present {
 			singleUser.FollowingDate = &(user.FollowingDate.Time)
 		}
 
 		users = append(users, singleUser)
 	}
 	if err := results.Err(); err != nil {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":   "error",
+			"message":  err.Error(),
 		})
-		CheckErr(err)
-		return
 	}
 
 	response := types.MultipleUserResponse{
@@ -443,38 +426,31 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 		Message:        "Retrieved users",
 	}
 
-	db.JsonResponse(http.StatusOK, res, response)
+	return c.JSON(http.StatusOK, response)
 }
 
 
 // middleware to grant access to private pages
-func ValidateToken(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		log.Println("middleware", req.URL)
+func ValidateToken(c echo.Context) bool {
+	if strings.Contains(c.Request().URL.String(), "login") {
 
-		authorization := req.Header.Get("Authorization")
+		return true
 
-		token, err := jwt.ParseWithClaims(strings.Replace(authorization, "Bearer ", "", 1), &types.Claims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(JwtSecret), nil
-		})
-		if err != nil {
-			print(err)
-			http.NotFound(res, req)
-			return
-		}
+	} else if strings.Contains(c.Request().URL.String(), "register") {
 
-		if claims, ok := token.Claims.(*types.Claims); ok && token.Valid {
-			ctx := context.WithValue(req.Context(), types.MyUserKey{}, claims.Id)
-			h.ServeHTTP(res, req.WithContext(ctx))
-		} else {
-			fmt.Println(err)
-			http.NotFound(res, req)
-		}
-	})
+		return true
+
+	} else if c.Request().Method == echo.OPTIONS {
+
+		return true
+
+	}
+
+	return false
 }
 
 
-func UpdateUser(res http.ResponseWriter, req *http.Request) {
+func UpdateUser(c echo.Context) error {
 
 	mailRegex := "(\\w[-._\\w]*\\w@\\w[-._\\w]*\\w\\.\\w{2,3})"
 	loginRegex := "^[a-z_0-9]{5,}$"
@@ -482,51 +458,46 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 	loginErrorRegex := "(users_login_key)"
 	now := time.Now()
 
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	loggedId := getUserId(c)
 
 	var body types.UserForm
-	decoder := json.NewDecoder(req.Body)
-	err := decoder.Decode(&body)
-	if err != nil {
-		panic(err)
-	}
-	defer req.Body.Close()
+	c.Bind(&body)
 
 	var matchEmail, matchLogin bool
 
 	if body.Email != "" {
 		body.Email = strings.TrimSpace(strings.ToLower(body.Email))
-		matchEmail, err = regexp.MatchString(mailRegex, body.Email)
+		matchEmail, _ = regexp.MatchString(mailRegex, body.Email)
 	} else {
 		matchEmail = false
 	}
 
 	if body.Login != "" {
 		body.Login = strings.TrimSpace(strings.ToLower(body.Login))
-		matchLogin, err = regexp.MatchString(loginRegex, body.Login)
+		matchLogin, _ = regexp.MatchString(loginRegex, body.Login)
 	} else {
 		matchLogin = false
 	}
 
 	if password := db.NewNullString(body.Password); password.Valid && len(body.Password) < 6 {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Password should be at least 6 characters.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":   "error",
+			"message":  "Password should be at least 6 characters.",
 		})
 
 	} else if !matchEmail {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Bad email.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":   "error",
+			"message":  "Bad email.",
 		})
 
 	} else if !matchLogin {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Login should be at least 5 characters and use only a-z, 1-9 or _.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":   "error",
+			"message":  "Login should be at least 5 characters and use only a-z, 1-9 or _.",
 		})
 
 	} else {
@@ -537,30 +508,40 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 		}
 
 		_, err := db.Db.Exec("UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), telephone=COALESCE($5, telephone), password=COALESCE($6, password), updated=$7 WHERE id = $8",
-			db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday, db.NewNullString(body.Login), db.NewNullString(body.Telephone), db.NewNullString(body.Password), now, loggedId)
+			db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday,
+			db.NewNullString(body.Login), db.NewNullString(body.Telephone),
+			db.NewNullString(body.Password), now, loggedId)
 
 		if err != nil {
 			if matchErrorEmail, _ := regexp.MatchString(emailErrorRegex, err.Error()); matchErrorEmail {
-				db.JsonResponse(http.StatusBadRequest, res, types.Response{
-					Status:     "error",
-					Message:    "Email already taken.",
+
+				return c.JSON(http.StatusBadRequest, echo.Map{
+					"status":   "error",
+					"message":  "Email already taken.",
 				})
+
 			} else if matchError, _ := regexp.MatchString(loginErrorRegex, err.Error()); matchError {
-				db.JsonResponse(http.StatusBadRequest, res, types.Response{
-					Status:     "error",
-					Message:    "Login already taken.",
+
+				return c.JSON(http.StatusBadRequest, echo.Map{
+					"status":   "error",
+					"message":  "Login already taken.",
 				})
+
 			} else {
-				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-					Status:     "error",
-					Message:    err.Error(),
+
+				return c.JSON(http.StatusInternalServerError, echo.Map{
+					"status":   "error",
+					"message":  err.Error(),
 				})
+
 			}
 		} else {
-			db.JsonResponse(http.StatusCreated, res, types.Response{
-				Status:     "success",
-				Message:    "Inserted one user",
+
+			return c.JSON(http.StatusCreated, echo.Map{
+				"status":   "success",
+				"message":  "Inserted one user",
 			})
+
 		}
 
 	}

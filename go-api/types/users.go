@@ -1,25 +1,24 @@
 package types
 
 import (
-	"database/sql"
-	"github.com/lib/pq"
 	"time"
+	"github.com/jackc/pgx/pgtype"
 )
 
 // TYPES used by USERS
 type User struct {
-	Id          sql.NullInt64   `json:"id"`
-	Firstname   sql.NullString  `json:"firstname"`
-	Lastname    sql.NullString  `json:"lastname"`
-	Birthday    pq.NullTime     `json:"birthday"`
-	Email       sql.NullString  `json:"email"`
-	Login       sql.NullString  `json:"login"`
-	Telephone   sql.NullString  `json:"telephone"`
-	Password    sql.NullString  `json:"-"`
-	FollowerNb  sql.NullInt64   `json:"follower_nb"`
-	FollowingNb sql.NullInt64   `json:"following_nb"`
-	Created     pq.NullTime     `json:"created"`
-	Updated     pq.NullTime     `json:"updated"`
+	Id          pgtype.Int4         `json:"id"`
+	Firstname   pgtype.Text         `json:"firstname"`
+	Lastname    pgtype.Text         `json:"lastname"`
+	Birthday    pgtype.Timestamptz  `json:"birthday"`
+	Email       pgtype.Text         `json:"email"`
+	Login       pgtype.Text         `json:"login"`
+	Telephone   pgtype.Text         `json:"telephone"`
+	Password    pgtype.Text         `json:"-"`
+	FollowerNb  pgtype.Int8         `json:"follower_nb"`
+	FollowingNb pgtype.Int8         `json:"following_nb"`
+	Created     pgtype.Timestamptz  `json:"created"`
+	Updated     pgtype.Timestamptz  `json:"updated"`
 }
 
 type UserForm struct {
@@ -47,8 +46,8 @@ type UserResponse struct {
 
 type SingleUserData struct {
 	User
-	FriendshipId    sql.NullInt64   `json:"friendship_id"`
-	FollowingDate   pq.NullTime     `json:"following_date"`
+	FriendshipId    pgtype.Int4         `json:"friendship_id"`
+	FollowingDate   pgtype.Timestamptz  `json:"following_date"`
 }
 
 type SingleUserDataResponse struct {

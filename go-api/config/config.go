@@ -1,13 +1,29 @@
 package config
 
-import "fmt"
+import (
+	"github.com/jackc/pgx"
+)
 
 const (
-	DB_USER     = "avencat"
-	DB_PASSWORD = "root"
-	DB_NAME     = "socialnetwork"
+	DB_USER         = "avencat"
+	DB_PASSWORD     = "root"
+	DB_NAME         = "socialnetwork"
+	DB_HOST         = "localhost"
+	DB_PORT         = 5432
+	MAX_CONNECTIONS = 1000
 )
 
 var (
-	Dbinfo      = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
+	dbInfo = pgx.ConnConfig{
+		Host:       DB_HOST,
+		Database:   DB_NAME,
+		User:       DB_USER,
+		Password:   DB_PASSWORD,
+		Port:       DB_PORT,
+	}
+
+	DbInfo = pgx.ConnPoolConfig{
+		ConnConfig: dbInfo,
+		MaxConnections: MAX_CONNECTIONS,
+	}
 )

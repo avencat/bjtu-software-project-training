@@ -163,7 +163,7 @@ export default class ToFollow extends Component {
                 friendship_id &&
                   <span style={{fontSize: 14, marginLeft: 5}}>
                     {
-                        ` - Followed since ${moment(following_date).format("DD MMMM YYYY HH:mm")}`
+                        ` - Followed since ${moment(following_date).calendar()}`
                     }
                   </span>
               }

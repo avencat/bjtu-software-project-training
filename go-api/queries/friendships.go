@@ -4,34 +4,29 @@ import (
 	"net/http"
 	"time"
 	"../types"
-	"encoding/json"
 	"../db"
 	"fmt"
-	"github.com/gorilla/mux"
 	"strconv"
 	"database/sql"
+	"github.com/labstack/echo"
+	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 )
 
-func CreateFriendship(res http.ResponseWriter, req *http.Request) {
+func CreateFriendship(c echo.Context) error {
 
 	now := time.Now()
 
-	var body types.FriendshipForm
-	decoder := json.NewDecoder(req.Body)
-	err := decoder.Decode(&body)
-	if err != nil {
-		panic(err)
-	}
-	defer req.Body.Close()
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	var body types.FriendshipForm; var err error
+	c.Bind(&body)
+	loggedId := getUserId(c)
 
 	if body.FollowingId == 0 {
 
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "following_id can not be null.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":     "error",
+			"message":    "following_id can not be null.",
 		})
-		return
 
 	} else {
 
@@ -41,68 +36,65 @@ func CreateFriendship(res http.ResponseWriter, req *http.Request) {
 			body.FollowingId, loggedId, now).Scan(&body.Id)
 
 		if err != nil || body.Id <= 0 {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    err.Error(),
+
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":     "error",
+				"message":    err.Error(),
 			})
-			CheckErr(err)
-			return
 		}
 
-		db.JsonResponse(http.StatusCreated, res, types.FriendshipResponse{
-			Status:         "success",
-			FriendshipId:   body.Id,
-			Message:        fmt.Sprintf("Inserted one friendship from user %v to user %v.", loggedId, body.FollowingId),
+		return c.JSON(http.StatusCreated, echo.Map{
+			"status":         "success",
+			"friendship_id":  body.Id,
+			"message":        fmt.Sprintf("Inserted one friendship from user %v to user %v.",
+				loggedId, body.FollowingId),
 		})
 	}
 }
 
-func DeleteFriendship(res http.ResponseWriter, req *http.Request) {
+func DeleteFriendship(c echo.Context) error {
 
-	vars := mux.Vars(req)
-	deleteIdString := vars["id"]
-	friendshipId, ok := strconv.ParseInt(deleteIdString, 10, 64)
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	friendshipId, ok := strconv.ParseInt(c.Param("id"), 10, 64)
+	loggedId := getUserId(c)
 
 	if ok != nil {
-		db.JsonResponse(http.StatusBadRequest, res, types.Response{
-			Status:     "error",
-			Message:    "Id not provided.",
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"status":   "error",
+			"message":  "Id not provided",
 		})
-		return
 	}
 
 	friendship, err := findFriendshipById(friendshipId)
 
 	if err != nil {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":   "error",
+			"message":  err.Error(),
 		})
-		CheckErr(err)
-		return
-	} else if !friendship.FollowerId.Valid || friendship.FollowerId.Int64 != loggedId {
+	} else if friendship.FollowerId.Status != pgtype.Present || int64(friendship.FollowerId.Int) != loggedId {
 
-		db.JsonResponse(http.StatusForbidden, res, types.Response{
-			Status:     "error",
-			Message:    "You can't delete this friendship",
+		return c.JSON(http.StatusForbidden, echo.Map{
+			"status":   "error",
+			"message":  "You can't delete this friendship",
 		})
-		return
 
 	} else {
 
 		_, err := db.Db.Exec("DELETE FROM friendships WHERE id = $1", friendshipId)
 
 		if err != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:  "error",
-				Message: err.Error(),
+
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":   "error",
+				"message":  err.Error(),
 			})
+
 		} else {
 			message := fmt.Sprintf("Removed friendship %v", friendshipId)
-			db.JsonResponse(http.StatusOK, res, types.Response{
-				Status:  "success",
-				Message: message,
+
+			return c.JSON(http.StatusOK, echo.Map{
+				"status":  "success",
+				"message": message,
 			})
 		}
 	}
@@ -127,42 +119,21 @@ func findFriendshipById(id int64) (types.Friendship, error) {
 	return friendship, nil
 }
 
-func GetFriendships(res http.ResponseWriter, req *http.Request) {
+func GetFriendships(c echo.Context) error {
 
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
-	var userId int64; var ok, err error; var results *sql.Rows; var friendships []types.SingleFriendshipDataResponse
-	vars := mux.Vars(req)
-	userIdString := vars["user_id"]
-	if userIdString == "" {
-		userIdString = vars["author_id"]
-		if userIdString == "" {
+	loggedId := getUserId(c)
+	var userId int64; var ok, err error; var results *pgx.Rows; var friendships []types.SingleFriendshipDataResponse
+	userId, ok = strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if ok != nil || userId == 0 {
+		userId, ok = strconv.ParseInt(c.Param("author_id"), 10, 64)
+		if ok != nil || userId == 0 {
 			userId = loggedId
-		} else {
-			userId, ok = strconv.ParseInt(userIdString, 10, 64)
-			if ok != nil {
-				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-					Status:     "error",
-					Message:    ok.Error(),
-				})
-				CheckErr(ok)
-				return
-			}
-		}
-	} else {
-		userId, ok = strconv.ParseInt(userIdString, 10, 64)
-		if ok != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    ok.Error(),
-			})
-			CheckErr(ok)
-			return
 		}
 	}
 
-	followers := vars["followers"]
-	followerId := vars["follower_id"]
-	followingId := vars["following_id"]
+	followers := c.Param("followers")
+	followerId := c.Param("follower_id")
+	followingId := c.Param("following_id")
 
 	request := "SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, " +
 		"users.login, users.firstname, users.lastname, users.id AS user_id " +
@@ -200,177 +171,124 @@ func GetFriendships(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if err != nil && err != sql.ErrNoRows {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":   "error",
+			"message":  err.Error(),
 		})
-		CheckErr(err)
-		return
 	}
-	defer results.Close()
 
 	for results.Next() {
 		var friendship types.SingleFriendshipData
 		if err := results.
 			Scan(&friendship.Id, &friendship.FollowingId, &friendship.FollowerId, &friendship.FollowingDate,
 				&friendship.User.Login, &friendship.User.Firstname, &friendship.User.Lastname, &friendship.User.Id); err != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    err.Error(),
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":   "error",
+				"message":  err.Error(),
 			})
-			CheckErr(err)
-			return
 		}
 
 		var singleFriendship types.SingleFriendshipDataResponse
 
-		if friendship.Id.Valid {
-			singleFriendship.Id = friendship.Id.Int64
+		if friendship.Id.Status == pgtype.Present {
+			singleFriendship.Id = int64(friendship.Id.Int)
 		}
-		if friendship.FollowingId.Valid {
-			singleFriendship.FollowingId = friendship.FollowingId.Int64
+		if friendship.FollowingId.Status == pgtype.Present {
+			singleFriendship.FollowingId = int64(friendship.FollowingId.Int)
 		}
-		if friendship.FollowerId.Valid {
-			singleFriendship.FollowerId = friendship.FollowerId.Int64
+		if friendship.FollowerId.Status == pgtype.Present {
+			singleFriendship.FollowerId = int64(friendship.FollowerId.Int)
 		}
-		if friendship.FollowingDate.Valid {
+		if friendship.FollowingDate.Status == pgtype.Present {
 			singleFriendship.FollowingDate = &(friendship.FollowingDate.Time)
 		}
-		if friendship.User.Login.Valid {
+		if friendship.User.Login.Status == pgtype.Present {
 			singleFriendship.User.Login = friendship.User.Login.String
 		}
-		if friendship.User.Firstname.Valid {
+		if friendship.User.Firstname.Status == pgtype.Present {
 			singleFriendship.User.Firstname = friendship.User.Firstname.String
 		}
-		if friendship.User.Lastname.Valid {
+		if friendship.User.Lastname.Status == pgtype.Present {
 			singleFriendship.User.Lastname = friendship.User.Lastname.String
 		}
-		if friendship.User.Id.Valid {
-			singleFriendship.User.Id = friendship.User.Id.Int64
+		if friendship.User.Id.Status == pgtype.Present {
+			singleFriendship.User.Id = int64(friendship.User.Id.Int)
 		}
 
 		friendships = append(friendships, singleFriendship)
 	}
 	if err := results.Err(); err != nil {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":   "error",
+			"message":  err.Error(),
 		})
-		CheckErr(err)
-		return
 	}
 
-	db.JsonResponse(http.StatusOK, res, types.ResponseData{
-		Status:     "success",
-		Data:       friendships,
-		Message:    "Retrieved friendships",
+	return c.JSON(http.StatusOK, echo.Map{
+		"status":   "success",
+		"data":     friendships,
+		"message":  "Retrieved friendships",
 	})
 }
 
-func GetFollowingNb(res http.ResponseWriter, req *http.Request) {
+func GetFollowingNb(c echo.Context) error {
 
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	loggedId := getUserId(c)
 	var userId int64; var ok, err error
-	vars := mux.Vars(req)
-	userIdString := vars["user_id"]
-	if userIdString == "" {
-		userIdString = vars["author_id"]
-		if userIdString == "" {
+	userId, ok = strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if ok != nil || userId == 0 {
+		userId, ok = strconv.ParseInt(c.Param("author_id"), 10, 64)
+		if ok != nil || userId == 0 {
 			userId = loggedId
-		} else {
-			userId, ok = strconv.ParseInt(userIdString, 10, 64)
-			if ok != nil {
-				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-					Status:     "error",
-					Message:    ok.Error(),
-				})
-				CheckErr(ok)
-				return
-			}
-		}
-	} else {
-		userId, ok = strconv.ParseInt(userIdString, 10, 64)
-		if ok != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    ok.Error(),
-			})
-			CheckErr(ok)
-			return
 		}
 	}
 
-	var count sql.NullInt64
+	var count pgtype.Int8
 
 	err = db.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE follower_id = $1", userId).Scan(&count)
 
 	if err != nil && err != sql.ErrNoRows {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		print(err.Error())
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":   "error",
+			"message":  err.Error(),
 		})
-		CheckErr(err)
-		return
 	}
 
-	db.JsonResponse(http.StatusOK, res, types.ResponseData{
-		Status:     "success",
-		Data:       count.Int64,
-		Message:    "Retrieved number of users that follow user " + string(userId),
+	return c.JSON(http.StatusOK, echo.Map{
+		"status":   "success",
+		"data":     count.Int,
+		"message":  "Retrieved number of users that follow user " + string(userId),
 	})
-
 }
 
-func GetFollowerNb(res http.ResponseWriter, req *http.Request) {
+func GetFollowerNb(c echo.Context) error {
 
-	loggedId := req.Context().Value(types.MyUserKey{}).(int64)
+	loggedId := getUserId(c)
 	var userId int64; var ok, err error
-	vars := mux.Vars(req)
-	userIdString := vars["user_id"]
-	if userIdString == "" {
-		userIdString = vars["author_id"]
-		if userIdString == "" {
+	userId, ok = strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if ok != nil || userId == 0 {
+		userId, ok = strconv.ParseInt(c.Param("author_id"), 10, 64)
+		if ok != nil || userId == 0 {
 			userId = loggedId
-		} else {
-			userId, ok = strconv.ParseInt(userIdString, 10, 64)
-			if ok != nil {
-				db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-					Status:     "error",
-					Message:    ok.Error(),
-				})
-				CheckErr(ok)
-				return
-			}
-		}
-	} else {
-		userId, ok = strconv.ParseInt(userIdString, 10, 64)
-		if ok != nil {
-			db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-				Status:     "error",
-				Message:    ok.Error(),
-			})
-			CheckErr(ok)
-			return
 		}
 	}
 
-	var count sql.NullInt64
+	var count pgtype.Int8
 
 	err = db.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE following_id = $1", userId).Scan(&count)
 
 	if err != nil && err != sql.ErrNoRows {
-		db.JsonResponse(http.StatusInternalServerError, res, types.Response{
-			Status:     "error",
-			Message:    err.Error(),
+		print(err.Error())
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"status":   "error",
+			"message":  err.Error(),
 		})
-		CheckErr(err)
-		return
 	}
 
-	db.JsonResponse(http.StatusOK, res, types.ResponseData{
-		Status:     "success",
-		Data:       count.Int64,
-		Message:    "Retrieved number of users that user " + string(userId) + " is following",
+	return c.JSON(http.StatusOK, echo.Map{
+		"status":   "success",
+		"data":     count.Int,
+		"message":  "Retrieved number of users that user " + string(userId) + " is following",
 	})
-
 }

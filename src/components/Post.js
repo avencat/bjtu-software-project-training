@@ -222,7 +222,7 @@ export default class Post extends Component {
               <br/>
               <span style={{marginLeft: 15}}>
                 {
-                  moment(post.created).format("DD MMMM YYYY HH:mm")
+                  moment(post.created).calendar()
                 }
               </span>
             </span>

@@ -1,15 +1,15 @@
 package db
 
 import (
-	"database/sql"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx"
 	"encoding/json"
 	"net/http"
 	"../config"
+	"database/sql"
 )
 
 var (
-	Db, err     = sql.Open("postgres", config.Dbinfo)
+	Db, err     = pgx.NewConnPool(config.DbInfo)
 )
 
 func Close() {

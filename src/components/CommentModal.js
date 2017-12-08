@@ -110,15 +110,21 @@ export default class CommentModal extends Component {
 
       if (data.status === "success") {
 
-        const listComment = data.data.map((oneComment) =>
-          <Comment
-            comment={oneComment}
-            key={oneComment.id}
-            onModify={this.fetchComments}
-            displayAlert={this.props.displayAlert}
-            router={this.props.router}
-          />
-        );
+        let listComment;
+
+        if (data.data) {
+          listComment = data.data.map((oneComment) =>
+            <Comment
+              comment={oneComment}
+              key={oneComment.id}
+              onModify={this.fetchComments}
+              displayAlert={this.props.displayAlert}
+              router={this.props.router}
+            />
+          );
+        } else {
+          listComment = [];
+        }
 
         this.setState({
           listComment
@@ -136,6 +142,7 @@ export default class CommentModal extends Component {
 
       }
     }).catch((err) => {
+      console.log(err);
       this.props.displayAlert(
 
         (err instanceof TypeError) ? "Couldn't connect to the server, please try again later. If the error persists, please contact us at social@network.net" : err.message,

@@ -196,17 +196,28 @@ export default class Comment extends Component {
 
         const listLikes = data.data;
 
-        for (let i = 0; i < listLikes.length; i++) {
-          if (listLikes[i].user.id === sessionStorage.getItem("userId")) {
+        if (listLikes) {
+          for (let i = 0; i < listLikes.length; i++) {
+            if (parseInt(listLikes[i].user.id, 10) === parseInt(sessionStorage.getItem("userId"), 10)) {
 
-            this.setState({
+              this.setState({
 
-              isLike: true,
-              likeId: listLikes[i].id
+                isLike: true,
+                likeId: listLikes[i].id
 
-            });
+              });
+            }
           }
+
+        } else {
+          this.setState({
+
+            isLike: false,
+            likeId: null
+
+          });
         }
+
       } else {
 
         this.props.displayAlert(
@@ -442,7 +453,7 @@ export default class Comment extends Component {
                 <div>
 
                   {
-                    (comment && comment.user && comment.user.id === sessionStorage.getItem("userId")) ?
+                    (comment && comment.user && parseInt(comment.user.id, 10) === parseInt(sessionStorage.getItem("userId"), 10)) ?
 
                       <button
 

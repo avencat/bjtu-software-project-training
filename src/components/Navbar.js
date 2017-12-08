@@ -168,7 +168,7 @@ const styles = {
     position: 'fixed',
     right: 0,
     top: 0,
-    zIndex: 2,
+    zIndex: 1001,
 
   },
 

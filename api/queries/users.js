@@ -287,12 +287,14 @@ function login(req, res, next) {
 function updateUser(req, res, next) {
 
   const login = /^[a-z0-9_]{5,}$/;
+  const mail = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
   const now = new Date();
 
   body = {
     firstname: req.body.firstname ? req.body.firstname : null,
     lastname: req.body.lastname ? req.body.lastname : null,
     birthday: req.body.birthday ? req.body.birthday : null,
+    email: req.body.email ? req.body.email.trim().toLowerCase() : null,
     login: req.body.login ? req.body.login.trim().toLowerCase() : null,
     telephone: req.body.telephone ? req.body.telephone : null,
     password: req.body.password ? req.body.password : null
@@ -314,13 +316,21 @@ function updateUser(req, res, next) {
         message: 'Login should be at least 5 characters and use only a-z, 1-9 or _.'
       });
 
+  } else if (!body.email || !mail.test(body.email)) {
+
+    res.status(400)
+      .json({
+        status: 'error',
+        message: 'Bad email.'
+      });
+
   } else {
 
     if (body.password)
       body.password = bcrypt.hashSync(body.password, 10);
 
-    db.none('UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), telephone=COALESCE($5, telephone), password=COALESCE($6, password), updated=$7 WHERE id = $8',
-      [body.firstname, body.lastname, body.birthday, body.login, body.telephone, body.password, now, req.user.id])
+    db.none('UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), telephone=COALESCE($5, telephone), password=COALESCE($6, password), email=COALESCE($7, email), updated=$8 WHERE id = $9',
+      [body.firstname, body.lastname, body.birthday, body.login, body.telephone, body.password, body.email, now, req.user.id])
       .then(() => {
         res.status(200)
           .json({

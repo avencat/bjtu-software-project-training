@@ -53,17 +53,30 @@ export default class Post extends Component {
 
         const listLikes = data.data;
 
-        for (let i = 0; i < listLikes.length; i++) {
-          if (listLikes[i].user.id === sessionStorage.getItem("userId")) {
+        if (listLikes) {
+          for (let i = 0; i < listLikes.length; i++) {
+            if (parseInt(listLikes[i].user.id, 10) === parseInt(sessionStorage.getItem("userId"), 10)) {
+
+              this.setState({
+
+                isLike: true,
+                likeId: listLikes[i].id
+
+              });
+            }
+          }
+
+        } else {
 
             this.setState({
 
-              isLike: true,
-              likeId: listLikes[i].id
+                isLike: false,
+                likeId: null
 
             });
-          }
+
         }
+
       } else {
 
         this.props.displayAlert(
@@ -77,6 +90,8 @@ export default class Post extends Component {
       }
 
     }).catch((err) => {
+
+      console.log(err)
 
       this.props.displayAlert(
 
@@ -240,7 +255,7 @@ export default class Post extends Component {
               </button>
 
               {
-                (post && post.user && post.user.id === sessionStorage.getItem("userId")) ?
+                (post && post.user && parseInt(post.user.id, 10) === parseInt(sessionStorage.getItem("userId"), 10)) ?
 
                   <button className="btn btn-default" type="button" data-toggle="modal" data-target={"#myModal"} style={styles.actionButton} onClick={() => this.props.setModalPost(post)}>
                     <i className="material-icons">mode_edit</i>

@@ -2,31 +2,28 @@ package db
 
 import (
 	"github.com/jackc/pgx"
-	"encoding/json"
-	"net/http"
-	"../config"
 	"database/sql"
+	"github.com/labstack/gommon/log"
 )
 
-var (
-	Db, err     = pgx.NewConnPool(config.DbInfo)
-)
-
-func Close() {
-	Db.Close()
+type AppContainer struct {
+	Db  *pgx.ConnPool
 }
 
-func JsonResponse(status int, w http.ResponseWriter, response interface{}) {
+var (
+	App  AppContainer
+)
 
-	jsonResponse, err := json.Marshal(response)
+func (a *AppContainer) Close() {
+	a.Db.Close()
+}
+
+func (a *AppContainer) Initialize(configuration pgx.ConnPoolConfig) {
+	var err error
+	a.Db, err = pgx.NewConnPool(configuration)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Fatal(err)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(jsonResponse)
 }
 
 func NewNullString(s string) sql.NullString {

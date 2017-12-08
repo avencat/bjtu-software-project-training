@@ -25,4 +25,8 @@ func Init() {
 	Router.POST("/profile", queries.NotImplemented)
 	initUsers()
 	initFriendships()
+	initPosts()
+	initComments()
+	initLikeComments()
+	initLikes()
 }

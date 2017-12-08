@@ -7,7 +7,6 @@ import (
 	"../db"
 	"fmt"
 	"strconv"
-	"database/sql"
 	"github.com/labstack/echo"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
@@ -30,7 +29,7 @@ func CreateFriendship(c echo.Context) error {
 
 	} else {
 
-		err = db.Db.QueryRow("INSERT into friendships(following_id, follower_id, following_date, created, updated) " +
+		err = db.App.Db.QueryRow("INSERT into friendships(following_id, follower_id, following_date, created, updated) " +
 			"values($1, $2, $3, $3, $3) " +
 			"RETURNING friendships.id AS friendship_id",
 			body.FollowingId, loggedId, now).Scan(&body.Id)
@@ -67,10 +66,17 @@ func DeleteFriendship(c echo.Context) error {
 	friendship, err := findFriendshipById(friendshipId)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"status":   "error",
-			"message":  err.Error(),
-		})
+		if err != pgx.ErrNoRows {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"status":   "error",
+				"message":  err.Error(),
+			})
+		} else {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"status":   "error",
+				"message":  "Friendship not found",
+			})
+		}
 	} else if friendship.FollowerId.Status != pgtype.Present || int64(friendship.FollowerId.Int) != loggedId {
 
 		return c.JSON(http.StatusForbidden, echo.Map{
@@ -80,7 +86,7 @@ func DeleteFriendship(c echo.Context) error {
 
 	} else {
 
-		_, err := db.Db.Exec("DELETE FROM friendships WHERE id = $1", friendshipId)
+		_, err := db.App.Db.Exec("DELETE FROM friendships WHERE id = $1", friendshipId)
 
 		if err != nil {
 
@@ -104,11 +110,11 @@ func findFriendshipById(id int64) (types.Friendship, error) {
 
 	var friendship types.Friendship
 
-	err := db.Db.QueryRow("SELECT * FROM friendships WHERE id = $1", id).
+	err := db.App.Db.QueryRow("SELECT * FROM friendships WHERE id = $1", id).
 		Scan(&friendship.Id, &friendship.FollowerId, &friendship.FollowingId, &friendship.FollowingDate, &friendship.Created, &friendship.Updated)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return types.Friendship{}, err
 		} else {
 			CheckErr(err)
@@ -123,17 +129,17 @@ func GetFriendships(c echo.Context) error {
 
 	loggedId := getUserId(c)
 	var userId int64; var ok, err error; var results *pgx.Rows; var friendships []types.SingleFriendshipDataResponse
-	userId, ok = strconv.ParseInt(c.Param("user_id"), 10, 64)
+	userId, ok = strconv.ParseInt(c.QueryParam("user_id"), 10, 64)
 	if ok != nil || userId == 0 {
-		userId, ok = strconv.ParseInt(c.Param("author_id"), 10, 64)
+		userId, ok = strconv.ParseInt(c.QueryParam("author_id"), 10, 64)
 		if ok != nil || userId == 0 {
 			userId = loggedId
 		}
 	}
 
-	followers := c.Param("followers")
-	followerId := c.Param("follower_id")
-	followingId := c.Param("following_id")
+	followers := c.QueryParam("followers")
+	followerId := c.QueryParam("follower_id")
+	followingId := c.QueryParam("following_id")
 
 	request := "SELECT friendships.id, friendships.following_id, friendships.follower_id, friendships.following_date, " +
 		"users.login, users.firstname, users.lastname, users.id AS user_id " +
@@ -146,11 +152,11 @@ func GetFriendships(c echo.Context) error {
 
 		if followerId != "" {
 
-			results, err = db.Db.Query(request + " AND friendships.follower_id = $2" + requestEnd, userId, followerId)
+			results, err = db.App.Db.Query(request + " AND friendships.follower_id = $2" + requestEnd, userId, followerId)
 
 		} else {
 
-			results, err = db.Db.Query(request + requestEnd, userId)
+			results, err = db.App.Db.Query(request + requestEnd, userId)
 
 		}
 
@@ -160,17 +166,17 @@ func GetFriendships(c echo.Context) error {
 
 		if followingId != "" {
 
-			results, err = db.Db.Query(request + " AND friendships.following_id = $2" + requestEnd, userId, followingId)
+			results, err = db.App.Db.Query(request + " AND friendships.following_id = $2" + requestEnd, userId, followingId)
 
 		} else {
 
-			results, err = db.Db.Query(request + requestEnd, userId)
+			results, err = db.App.Db.Query(request + requestEnd, userId)
 
 		}
 
 	}
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"status":   "error",
 			"message":  err.Error(),
@@ -235,9 +241,9 @@ func GetFollowingNb(c echo.Context) error {
 
 	loggedId := getUserId(c)
 	var userId int64; var ok, err error
-	userId, ok = strconv.ParseInt(c.Param("user_id"), 10, 64)
+	userId, ok = strconv.ParseInt(c.QueryParam("user_id"), 10, 64)
 	if ok != nil || userId == 0 {
-		userId, ok = strconv.ParseInt(c.Param("author_id"), 10, 64)
+		userId, ok = strconv.ParseInt(c.QueryParam("author_id"), 10, 64)
 		if ok != nil || userId == 0 {
 			userId = loggedId
 		}
@@ -245,10 +251,9 @@ func GetFollowingNb(c echo.Context) error {
 
 	var count pgtype.Int8
 
-	err = db.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE follower_id = $1", userId).Scan(&count)
+	err = db.App.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE follower_id = $1", userId).Scan(&count)
 
-	if err != nil && err != sql.ErrNoRows {
-		print(err.Error())
+	if err != nil && err != pgx.ErrNoRows {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"status":   "error",
 			"message":  err.Error(),
@@ -266,9 +271,9 @@ func GetFollowerNb(c echo.Context) error {
 
 	loggedId := getUserId(c)
 	var userId int64; var ok, err error
-	userId, ok = strconv.ParseInt(c.Param("user_id"), 10, 64)
+	userId, ok = strconv.ParseInt(c.QueryParam("user_id"), 10, 64)
 	if ok != nil || userId == 0 {
-		userId, ok = strconv.ParseInt(c.Param("author_id"), 10, 64)
+		userId, ok = strconv.ParseInt(c.QueryParam("author_id"), 10, 64)
 		if ok != nil || userId == 0 {
 			userId = loggedId
 		}
@@ -276,10 +281,9 @@ func GetFollowerNb(c echo.Context) error {
 
 	var count pgtype.Int8
 
-	err = db.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE following_id = $1", userId).Scan(&count)
+	err = db.App.Db.QueryRow("SELECT COUNT(id) FROM friendships WHERE following_id = $1", userId).Scan(&count)
 
-	if err != nil && err != sql.ErrNoRows {
-		print(err.Error())
+	if err != nil && err != pgx.ErrNoRows {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"status":   "error",
 			"message":  err.Error(),

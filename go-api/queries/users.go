@@ -8,7 +8,6 @@ import (
 	"../types"
 	"fmt"
 	"strings"
-	"database/sql"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
 	"strconv"
@@ -75,9 +74,13 @@ func CreateUser(c echo.Context) error {
 
 		body.Password = string(pass)
 
-		_, err := db.Db.Exec("INSERT into users(firstname, lastname, birthday, email, login, telephone, password, created, updated, following_nb, follower_nb) values($1, $2, $3, $4, $5, $6, $7, $8, $8, 0, 0)",
-		db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday, body.Email,
-			body.Login, db.NewNullString(body.Telephone), body.Password, now)
+		firstname := db.NewNullString(body.Firstname)
+		lastname := db.NewNullString(body.Lastname)
+		telephone := db.NewNullString(body.Telephone)
+
+		_, err := db.App.Db.Exec("INSERT into users(firstname, lastname, birthday, email, login, telephone, password, created, updated, following_nb, follower_nb) values($1, $2, $3, $4, $5, $6, $7, $8, $8, 0, 0)",
+		&firstname, &lastname, body.Birthday, body.Email,
+			body.Login, &telephone, body.Password, now)
 
 		if err != nil {
 			if matchErrorEmail, _ := regexp.MatchString(emailErrorRegex, err.Error()); matchErrorEmail {
@@ -115,7 +118,6 @@ func CreateUser(c echo.Context) error {
 func DeleteUser(c echo.Context) error {
 	deleteId, ok := strconv.ParseInt(c.Param("id"), 10, 64)
 	userId := getUserId(c)
-//	deleteId, ok := strconv.ParseInt(deleteIdString, 10, 64)
 
 	if ok != nil || userId != deleteId {
 		return c.JSON(http.StatusForbidden, echo.Map{
@@ -124,7 +126,7 @@ func DeleteUser(c echo.Context) error {
 		})
 	} else {
 
-		_, err := db.Db.Exec("DELETE FROM users WHERE id = $1", userId)
+		_, err := db.App.Db.Exec("DELETE FROM users WHERE id = $1", userId)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{
@@ -147,13 +149,13 @@ func FindUserById(id int64) (types.User, error) {
 
 	var user types.User
 
-	err := db.Db.QueryRow("SELECT * FROM users WHERE id = $1", id).
+	err := db.App.Db.QueryRow("SELECT * FROM users WHERE id = $1", id).
 		Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Birthday, &user.Email,
 		&user.Login, &user.Telephone, &user.Password, &user.Created, &user.Updated,
 		&user.FollowingNb, &user.FollowerNb)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return types.User{}, err
 		} else {
 			CheckErr(err)
@@ -169,13 +171,13 @@ func FindUserByLogin(username string) (types.User, error) {
 
 	var user types.User
 
-	err := db.Db.QueryRow("SELECT * FROM users WHERE login = $1", username).
+	err := db.App.Db.QueryRow("SELECT * FROM users WHERE login = $1", username).
 		Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Birthday, &user.Email,
 		&user.Login, &user.Telephone, &user.Password, &user.Created, &user.Updated,
 		&user.FollowingNb, &user.FollowerNb)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return types.User{}, err
 		} else {
 			CheckErr(err)
@@ -256,7 +258,7 @@ func GetSingleUser(c echo.Context) error {
 
 	if userId == loggedId {
 
-		err = db.Db.QueryRow(request + ", users.telephone, users.email FROM users " +
+		err = db.App.Db.QueryRow(request + ", users.telephone, users.email FROM users " +
 			"LEFT JOIN friendships ON friendships.follower_id = $1 AND friendships.following_id = $2 " +
 			"WHERE users.id = $2", loggedId, userId).Scan(&userData.Id, &userData.Login, &userData.Firstname,
 			&userData.Lastname, &userData.Birthday, &userData.FollowingNb, &userData.FollowerNb,
@@ -264,7 +266,7 @@ func GetSingleUser(c echo.Context) error {
 
 	} else {
 
-		err = db.Db.QueryRow(request + " FROM users " +
+		err = db.App.Db.QueryRow(request + " FROM users " +
 			"LEFT JOIN friendships ON friendships.follower_id = $1 AND friendships.following_id = $2 " +
 			"WHERE users.id = $2", loggedId, userId).
 			Scan(&userData.Id, &userData.Login, &userData.Firstname, &userData.Lastname, &userData.Birthday,
@@ -272,12 +274,12 @@ func GetSingleUser(c echo.Context) error {
 
 	}
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"status":     "error",
 			"message":    err.Error(),
 		})
-	} else if err == sql.ErrNoRows {
+	} else if err == pgx.ErrNoRows {
 		return c.JSON(http.StatusNotFound, echo.Map{
 			"status":   "error",
 			"message":  "Not found.",
@@ -344,7 +346,7 @@ func GetUsers(c echo.Context) error {
 
 	if q != "" {
 
-		results, err = db.Db.Query(query + " AND (users.firstname LIKE $2 OR users.lastname " +
+		results, err = db.App.Db.Query(query + " AND (users.firstname LIKE $2 OR users.lastname " +
 			"LIKE $2 OR users.login LIKE $2 OR users.email = $3) ORDER BY friendships.following_id DESC",
 			loggedId, "%" + q + "%", q)
 
@@ -357,7 +359,7 @@ func GetUsers(c echo.Context) error {
 
 	} else {
 
-		results, err = db.Db.Query(query + " ORDER BY friendships.following_id DESC",
+		results, err = db.App.Db.Query(query + " ORDER BY friendships.following_id DESC",
 			loggedId)
 
 		if err != nil {
@@ -507,10 +509,17 @@ func UpdateUser(c echo.Context) error {
 			body.Password = string(pass)
 		}
 
-		_, err := db.Db.Exec("UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), telephone=COALESCE($5, telephone), password=COALESCE($6, password), updated=$7 WHERE id = $8",
-			db.NewNullString(body.Firstname), db.NewNullString(body.Lastname), body.Birthday,
-			db.NewNullString(body.Login), db.NewNullString(body.Telephone),
-			db.NewNullString(body.Password), now, loggedId)
+		firstname := db.NewNullString(body.Firstname)
+		lastname := db.NewNullString(body.Lastname)
+		login := db.NewNullString(body.Login)
+		email := db.NewNullString(body.Email)
+		telephone := db.NewNullString(body.Telephone)
+		password := db.NewNullString(body.Password)
+
+		_, err := db.App.Db.Exec("UPDATE users SET firstname=COALESCE($1, firstname), lastname=COALESCE($2, lastname), birthday=COALESCE($3, birthday), login=COALESCE($4, login), telephone=COALESCE($5, telephone), password=COALESCE($6, password), email=COALESCE($7, email), updated=$8 WHERE id = $9",
+			&firstname, &lastname, body.Birthday,
+			&login, &telephone,
+			&password, &email, now, loggedId)
 
 		if err != nil {
 			if matchErrorEmail, _ := regexp.MatchString(emailErrorRegex, err.Error()); matchErrorEmail {
@@ -539,7 +548,7 @@ func UpdateUser(c echo.Context) error {
 
 			return c.JSON(http.StatusCreated, echo.Map{
 				"status":   "success",
-				"message":  "Inserted one user",
+				"message":  fmt.Sprintf("Updated one user %v", loggedId),
 			})
 
 		}

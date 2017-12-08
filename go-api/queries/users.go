@@ -104,7 +104,7 @@ func CreateUser(c echo.Context) error {
 			}
 		} else {
 
-			return c.JSON(http.StatusBadRequest, echo.Map{
+			return c.JSON(http.StatusCreated, echo.Map{
 				"status":         "success",
 				"message":        "Inserted one user",
 			})
@@ -171,7 +171,7 @@ func FindUserByLogin(username string) (types.User, error) {
 
 	var user types.User
 
-	err := db.App.Db.QueryRow("SELECT * FROM users WHERE login = $1", username).
+	err := db.App.Db.QueryRow("SELECT * FROM users WHERE login = $1", strings.TrimSpace(strings.ToLower(username))).
 		Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Birthday, &user.Email,
 		&user.Login, &user.Telephone, &user.Password, &user.Created, &user.Updated,
 		&user.FollowingNb, &user.FollowerNb)
@@ -471,7 +471,7 @@ func UpdateUser(c echo.Context) error {
 		body.Email = strings.TrimSpace(strings.ToLower(body.Email))
 		matchEmail, _ = regexp.MatchString(mailRegex, body.Email)
 	} else {
-		matchEmail = false
+		matchEmail = true
 	}
 
 	if body.Login != "" {
@@ -546,7 +546,7 @@ func UpdateUser(c echo.Context) error {
 			}
 		} else {
 
-			return c.JSON(http.StatusCreated, echo.Map{
+			return c.JSON(http.StatusOK, echo.Map{
 				"status":   "success",
 				"message":  fmt.Sprintf("Updated one user %v", loggedId),
 			})

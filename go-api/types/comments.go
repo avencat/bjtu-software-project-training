@@ -35,3 +35,9 @@ type SingleCommentDataResponse struct {
 	CommentForm
 	User            UserForm    `json:"user,omitempty"`
 }
+
+type CommentResponse struct {
+	Data            []SingleCommentDataResponse `json:"data,omitempty"`
+	Status          string                      `json:"status,omitempty"`
+	Message         string                      `json:"message,omitempty"`
+}

@@ -216,7 +216,7 @@ func GetAllPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"status":   "success",
 		"data":     posts,
-		"message":  "Retrieved friendships",
+		"message":  "Retrieved posts",
 	})
 }
 

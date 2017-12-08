@@ -35,3 +35,9 @@ type SinglePostDataResponse struct {
 	PostForm
 	User            UserForm    `json:"user,omitempty"`
 }
+
+type PostResponse struct {
+	Data            []SinglePostDataResponse    `json:"data,omitempty"`
+	Status          string                      `json:"status,omitempty"`
+	Message         string                      `json:"message,omitempty"`
+}

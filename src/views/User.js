@@ -104,35 +104,44 @@ export default class User extends Component {
 
         if (data.status === "success") {
 
-          const listPosts = data.data.map((onePost) => {
+          if (data.data) {
+            const listPosts = data.data.map((onePost) => {
 
-            if (onePost.id === this.state.modalPost.id) {
+              if (onePost.id === this.state.modalPost.id) {
 
-              this.setState({modalPost: onePost});
+                this.setState({modalPost: onePost});
 
-            }
+              }
 
-            return (
-              <Post
-                post={onePost}
-                key={onePost.id}
-                setModalPost={this.setModalPostContent}
-                setModalComment={this.setModalCommentsContent}
-                displayAlert={this.displayAlert}
-              />
-            )
-          });
-
-          this.setState({
-            posts: data.data,
-            listPosts : []
-          }, () => {
+              return (
+                <Post
+                  post={onePost}
+                  key={onePost.id}
+                  setModalPost={this.setModalPostContent}
+                  setModalComment={this.setModalCommentsContent}
+                  displayAlert={this.displayAlert}
+                />
+              )
+            });
 
             this.setState({
-              listPosts
-            })
+              posts: data.data,
+              listPosts : []
+            }, () => {
 
-          });
+              this.setState({
+                listPosts
+              })
+
+            });
+          } else {
+
+            this.setState({
+              posts: [],
+              listPosts: [],
+            });
+
+          }
 
         } else {
 

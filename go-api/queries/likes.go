@@ -133,10 +133,11 @@ func GetLikes(c echo.Context) error {
 			"message":    "post_id not provided.",
 		})
 	} else {
-		results, err = db.App.Db.Query("SELECT post_likes.id, post_likes.user_id, post_likes.post_id, post_likes.created, post_likes.updated, " +
-			"users.login, users.firstname, users.lastname " +
-			"FROM post_likes INNER JOIN users ON post_likes.user_id = users.id " +
-			"WHERE post_likes.post_id = $1", postId)
+		results, err = db.App.Db.Query(`SELECT
+				post_likes.id, post_likes.user_id, post_likes.post_id, post_likes.created, post_likes.updated,
+				users.login, users.firstname, users.lastname
+			FROM post_likes INNER JOIN users ON post_likes.user_id = users.id
+			WHERE post_likes.post_id = $1`, postId)
 	}
 
 	if err != nil && err != pgx.ErrNoRows {

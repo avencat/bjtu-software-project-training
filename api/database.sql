@@ -12,6 +12,7 @@ CREATE TABLE      users (
   login           TEXT UNIQUE NOT NULL,
   telephone       TEXT UNIQUE,
   password        TEXT NOT NULL,
+  profile_picture TEXT,
   created         TIMESTAMPTZ DEFAULT NOW(),
   updated         TIMESTAMPTZ DEFAULT NOW(),
   following_nb    BIGINT NOT NULL DEFAULT 0,
@@ -49,10 +50,12 @@ CREATE TABLE      comments (
   id              SERIAL PRIMARY KEY,
   author_id       BIGINT NOT NULL,
   post_id         BIGINT NOT NULL,
+  parent_id       BIGINT DEFAULT NULL,
   content         TEXT,
   created         TIMESTAMPTZ DEFAULT NOW(),
   updated         TIMESTAMPTZ DEFAULT NOW(),
   likes_nb        BIGINT NOT NULL DEFAULT 0,
+  comments_nb     BIGINT NOT NULL DEFAULT 0,
   FOREIGN KEY     (author_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY     (post_id)   REFERENCES posts(id) ON DELETE CASCADE
 );
@@ -136,16 +139,24 @@ CREATE FUNCTION manage_comments_nb()
 
     -- Check that post_id is given
     IF (TG_OP = 'INSERT') THEN
-      IF NEW.post_id IS NULL THEN
-        RAISE EXCEPTION 'post_id cannot be null';
+      IF NEW.post_id AND NEW.parent_id IS NULL THEN
+        RAISE EXCEPTION 'post_id or parent_id must be set';
       END IF;
     END IF;
 
     -- Substract or add one to comments_nb
     IF (TG_OP = 'DELETE') THEN
-      UPDATE posts SET comments_nb = comments_nb - 1 WHERE id = OLD.post_id;
+      IF NEW.parent_id IS NULL THEN
+        UPDATE posts SET comments_nb = comments_nb - 1 WHERE id = OLD.post_id;
+      ELSE
+        UPDATE comments SET comments_nb = comments_nb - 1 WHERE id = OLD.parent_id;
+      END IF;
     ELSE
-      UPDATE posts SET comments_nb = comments_nb + 1 WHERE id = NEW.post_id;
+      IF NEW.parent_id IS NULL THEN
+        UPDATE posts SET comments_nb = comments_nb + 1 WHERE id = NEW.post_id;
+      ELSE
+        UPDATE comments SET comments_nb = comments_nb + 1 WHERE id = NEW.parent_id;
+      END IF;
     END IF;
 
     -- Fill the time fields

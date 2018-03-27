@@ -12,6 +12,7 @@ CREATE TABLE      users (
   login           TEXT UNIQUE NOT NULL,
   telephone       TEXT UNIQUE,
   password        TEXT NOT NULL,
+  profile_picture TEXT,
   created         TIMESTAMPTZ DEFAULT NOW(),
   updated         TIMESTAMPTZ DEFAULT NOW(),
   following_nb    BIGINT NOT NULL DEFAULT 0,
@@ -49,10 +50,12 @@ CREATE TABLE      comments (
   id              SERIAL PRIMARY KEY,
   author_id       BIGINT NOT NULL,
   post_id         BIGINT NOT NULL,
+  parent_id       BIGINT DEFAULT NULL,
   content         TEXT,
   created         TIMESTAMPTZ DEFAULT NOW(),
   updated         TIMESTAMPTZ DEFAULT NOW(),
   likes_nb        BIGINT NOT NULL DEFAULT 0,
+  comments_nb     BIGINT NOT NULL DEFAULT 0,
   FOREIGN KEY     (author_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY     (post_id)   REFERENCES posts(id) ON DELETE CASCADE
 );
@@ -136,16 +139,24 @@ BEGIN
 
   -- Check that post_id is given
   IF (TG_OP = 'INSERT') THEN
-    IF NEW.post_id IS NULL THEN
-      RAISE EXCEPTION 'post_id cannot be null';
+    IF NEW.post_id AND NEW.parent_id IS NULL THEN
+      RAISE EXCEPTION 'post_id or parent_id must be set';
     END IF;
   END IF;
 
   -- Substract or add one to comments_nb
   IF (TG_OP = 'DELETE') THEN
-    UPDATE posts SET comments_nb = comments_nb - 1 WHERE id = OLD.post_id;
+    IF NEW.parent_id IS NULL THEN
+      UPDATE posts SET comments_nb = comments_nb - 1 WHERE id = OLD.post_id;
+    ELSE
+      UPDATE comments SET comments_nb = comments_nb - 1 WHERE id = OLD.parent_id;
+    END IF;
   ELSE
-    UPDATE posts SET comments_nb = comments_nb + 1 WHERE id = NEW.post_id;
+    IF NEW.parent_id IS NULL THEN
+      UPDATE posts SET comments_nb = comments_nb + 1 WHERE id = NEW.post_id;
+    ELSE
+      UPDATE comments SET comments_nb = comments_nb + 1 WHERE id = NEW.parent_id;
+    END IF;
   END IF;
 
   -- Fill the time fields
@@ -269,10 +280,6 @@ BEGIN
   END IF;
 
   -- Fill the time fields
-  IF (TG_OP = 'INSERT') THEN
-    NEW.created := NOW();
-  END IF;
-  NEW.updated := NOW();
 
   RETURN NEW;
 
@@ -307,36 +314,36 @@ $trigger_manage_comments$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER trigger_manage_posts
-BEFORE INSERT OR UPDATE ON posts
-FOR EACH ROW
+  BEFORE INSERT OR UPDATE ON posts
+  FOR EACH ROW
 EXECUTE PROCEDURE manage_posts();
 
 CREATE TRIGGER trigger_manage_comments
-BEFORE INSERT OR UPDATE ON comments
-FOR EACH ROW
+  BEFORE INSERT OR UPDATE ON comments
+  FOR EACH ROW
 EXECUTE PROCEDURE manage_comments();
 
 CREATE TRIGGER trigger_manage_comments_nb
-AFTER INSERT OR DELETE ON comments
-FOR EACH ROW
+  AFTER INSERT OR DELETE ON comments
+  FOR EACH ROW
 EXECUTE PROCEDURE manage_comments_nb();
 
 CREATE TRIGGER trigger_manage_following_nb
-AFTER INSERT OR DELETE ON friendships
-FOR EACH ROW
+  AFTER INSERT OR DELETE ON friendships
+  FOR EACH ROW
 EXECUTE PROCEDURE manage_following_nb();
 
 CREATE TRIGGER trigger_manage_likes_nb
-AFTER INSERT OR DELETE ON post_likes
-FOR EACH ROW
+  AFTER INSERT OR DELETE ON post_likes
+  FOR EACH ROW
 EXECUTE PROCEDURE manage_likes_nb();
 
 CREATE TRIGGER trigger_manage_comment_likes_nb
-AFTER INSERT OR DELETE ON comment_likes
-FOR EACH ROW
+  AFTER INSERT OR DELETE ON comment_likes
+  FOR EACH ROW
 EXECUTE PROCEDURE manage_comment_likes_nb();
 
 CREATE TRIGGER trigger_sanitize_username_and_email
-BEFORE INSERT OR UPDATE ON users
-FOR EACH ROW
+  BEFORE INSERT OR UPDATE ON users
+  FOR EACH ROW
 EXECUTE PROCEDURE sanitize_username_and_email();
